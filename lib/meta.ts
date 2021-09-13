@@ -17,7 +17,8 @@ type RiotHookComponent = (
     'onBeforeUpdate' |
     'onUpdated' |
     'onBeforeUnmount' |
-    'onUnmounted'
+    'onUnmounted' |
+    'onAsyncRendering'
 );
 
 
@@ -26,33 +27,34 @@ type RiotHookComponent = (
  * @param {RiotHookComponent} hook
  * @returns {MakeHook}
  */
-const mkHook = (hook: RiotHookComponent): MakeHook => (
+export const mkHook = (hook: RiotHookComponent): MakeHook => (
 
     <T>(component: T, fn: Function, runAfter = false) => {
 
         const original = component[hook];
 
+        if (!fn || typeof fn !== 'function') {
+
+            throw TypeError('hook must be a function');
+        }
+
         component[hook] = function (...args) {
 
-            if (!runAfter && original) {
-
-                original.call(this, ...args);
-            }
+            !runAfter && original.call(this, ...args);
 
             fn.call(this, ...args);
 
-            if (runAfter && original) {
-
-                original.call(this, ...args);
-            }
-
+            runAfter && original.call(this, ...args);
         };
     }
 );
 
 export const makeOnBeforeMount = mkHook('onBeforeMount');
-export const makeOnBeforeUnmount = mkHook('onBeforeUnmount');
 export const makeOnMounted = mkHook('onMounted');
+export const makeOnBeforeUpdate = mkHook('onBeforeUpdate');
+export const makeOnUpdated = mkHook('onUpdated');
+export const makeOnBeforeUnmount = mkHook('onBeforeUnmount');
+export const makeOnUnmounted = mkHook('onUnmounted');
 
 export const mergeState = <T>(component: T & RiotComponent, state: object) => {
 

@@ -5,7 +5,7 @@ interface SetFetchingFunction {
     (fn: Function): object|Error;
 }
 
-interface QueryableComponent {
+export interface QueryableComponent {
 
     /**
      * Sets component's state to isFetching true and captures any
@@ -23,7 +23,7 @@ interface QueryableComponent {
      * @param {Function} fn function to be executed
      * @returns {function}
      */
-    setWillFetch: (fn: Function) => SetFetchingFunction;
+    fnWillFetch: (fn: Function) => SetFetchingFunction;
 }
 
 /**
@@ -58,11 +58,11 @@ export const makeQueryable = function <T>(component: T) {
         }
     };
 
-    queryable.setWillFetch = (fn: Function) => (
+    queryable.fnWillFetch = (fn: Function) => (
 
-        () => (
+        (...args) => (
 
-            queryable.setFetching(fn)
+            queryable.setFetching(() => fn(...args))
         )
     );
 

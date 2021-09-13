@@ -4,6 +4,7 @@
  * Revamped to include strong type support, OOP, nested observers, and debugging tools
  */
 
+import { makeOnBeforeUnmount } from "./meta";
 import OptionsValidator from "./options-validator";
 
 const ALL_CALLBACKS = '*'
@@ -33,6 +34,13 @@ export type ObservedComponent = {
 
 export type ObservableInstanceChild = ObservedComponent & Cleanup
 
+export type ObservableInstance<T> = ObservedComponent & {
+    observe: Observable<T>['observe'],
+    $_spy?: ObserverSpy;
+    $_ref?: String;
+    $_observer: Observable<T>
+}
+
 
 const freezeProp = () => ({
 
@@ -41,9 +49,16 @@ const freezeProp = () => ({
     configurable: false,
 })
 
-const defineOpts = (value: any) => ({
+/**
+ * Defines an object's properties and makes them non-enumerable
+ * or configurable.
+ * @param value
+ * @returns object define property values
+ */
+const defineOpts = (value: any, more?: any) => ({
 
     ...freezeProp(),
+    ...(more || {}),
     value
 });
 
@@ -96,7 +111,7 @@ const validator = new OptionsValidator({
     spy: 'Function'
 });
 
-export default class Observable<T> {
+export class Observable<T> {
 
     $_callbacks: EventCallbacksMap = new Map();
     $_target: any = null;
@@ -108,6 +123,30 @@ export default class Observable<T> {
         const self = this;
         this.$_target = target || this;
 
+        // Make these functions non-enumerable
+        define(this, {
+            on: defineOpts(this.on),
+            one: defineOpts(this.one),
+            off: defineOpts(this.off),
+            trigger: defineOpts(this.trigger),
+            observe: defineOpts(this.observe),
+            $_callbacks: defineOpts(this.$_callbacks),
+            $_target: defineOpts(this.$_target),
+            $_spy: defineOpts(this.$_spy, { configurable: true }),
+            $_ref: defineOpts(this.$_ref, { configurable: true })
+        });
+
+        // Validate option if exists
+        if (options) {
+
+            validator.validate(options);
+
+            options.ref && define(this, { $_ref: defineOpts(options.ref) });
+            options.spy && define(this, { $_spy: defineOpts(options.spy) });
+        }
+
+        // Wrapper functions if you want to observe a target
+        // Defined to make them non-enumerable
         if (target) {
 
             define(target, {
@@ -116,28 +155,10 @@ export default class Observable<T> {
                 off: defineOpts((ev: string, fn: Function) => self.off(ev, fn)),
                 trigger: defineOpts((ev: string, ...args: any[]) => self.trigger(ev, ...args)),
                 observe: defineOpts((component: any, prefix?: string) => self.observe(component, prefix)),
-            });
-        }
-        else {
-
-            define(this, {
-                on: defineOpts(this.on),
-                one: defineOpts(this.one),
-                off: defineOpts(this.off),
-                trigger: defineOpts(this.trigger),
-                observe: defineOpts(this.observe),
-                $_callbacks: defineOpts(this.$_callbacks),
-                $_target: defineOpts(this.$_target)
+                $_observer: defineOpts(self)
             });
         }
 
-        if (options) {
-
-            validator.validate(options);
-
-            options.ref && define(this, { $_ref: defineOpts(options.ref) });
-            options.spy && define(this, { $_spy: defineOpts(options.spy) });
-        }
 
         return this.$_target;
     }
@@ -179,68 +200,76 @@ export default class Observable<T> {
             namedEvent = (ev) => ev;
         }
 
-        const observer = new Observable({}, {
-            ref: `${this.$_ref || 'parent'}-${prefix || 'child'}`,
-            spy: this.$_spy
-        });
+        // Simple tacking for simple cleanup for now
+        // TODO: figure out a way to track parent `off` to avoid tracking
+        const listenerTracker: Set<[string, Function]> = new Set();
+
+        const trackListener = (event, fn) => {
+
+            listenerTracker.add([event, fn]);
+
+            return fn
+        };
 
         define(component, {
 
             on: defineOpts(
                 (ev: string, fn: Function) => {
 
-                    const { cleanup: cleanupChild } = observer.on(ev, fn);
-                    const { cleanup: cleanupParent } = self.on(namedEvent(ev), fn);
-
-                    return {
-                        cleanup: () => (cleanupChild(), cleanupParent())
-                    };
+                    return self.on(
+                        namedEvent(ev),
+                        trackListener(ev, fn)
+                    );
                 }
             ),
 
             one: defineOpts(
                 (ev: string, fn: Function) => {
 
-                    observer.one(ev, fn);
-                    self.one(namedEvent(ev), fn);
+                    return self.one(
+                        namedEvent(ev),
+                        trackListener(ev, fn)
+                    );
                 }
             ),
 
             off: defineOpts(
                 (ev: string, fn?: Function) => {
 
+                    const tracked = [...listenerTracker.values()];
+
                     // Handle removing all callbacks from this instance related to child observable. Only all of the child instance's callbacks should be removed.
                     if (ev === ALL_CALLBACKS) {
 
-                        for (const [ev, listeners] of observer.$_callbacks.entries()) {
+                        for (const entry of tracked) {
 
-                            for (const listener of listeners) {
-
-                                self.off(ev, listener);
-                            }
+                            const [ev, listener] = entry;
+                            listenerTracker.delete(entry);
+                            self.off(namedEvent(ev), listener);
                         }
                     }
                     else {
 
+                        const entry = tracked.find(([e, f]) => (
+                            ev === e && fn === f
+                        ));
+                        listenerTracker.delete(entry);
                         self.off(namedEvent(ev), fn);
                     }
-
-                    observer.off(ev, fn);
                 }
             ),
 
             trigger: defineOpts(
                 (ev: string, ...args: any[]) => {
 
-                    observer.trigger(ev, ...args);
-                    self.trigger(namedEvent(ev), ...args);
+                    return self.trigger(namedEvent(ev), ...args);
                 }
             ),
 
             cleanup: defineOpts(
                 () => {
 
-                    observer.off('*');
+                    (component as any).off('*');
                 }
             )
         });
@@ -253,7 +282,12 @@ export default class Observable<T> {
      * @param component Riot component
      * @returns component with an obserable interface
      */
-    install<C>(component: C) {
+    install<C>(component: C): C & ObservableInstanceChild {
+
+        makeOnBeforeUnmount(component, () => {
+
+            (component as any).cleanup();
+        });
 
         return this.observe(component);
     }
@@ -324,19 +358,24 @@ export default class Observable<T> {
 
         if (event === ALL_CALLBACKS && !listener) {
 
-            this.$_callbacks.clear()
-        } else {
-
-            if (listener) {
-                const fns = this.$_callbacks.get(event)
-
-                if (fns) {
-
-                    fns.delete(listener)
-                    if (fns.size === 0) this.$_callbacks.delete(event)
-                }
-            } else this.$_callbacks.delete(event)
+            this.$_callbacks.clear();
+            return;
         }
+
+        if (listener) {
+
+            const fns = this.$_callbacks.get(event);
+
+            if (fns) {
+
+                fns.delete(listener);
+                if (fns.size === 0) this.$_callbacks.delete(event);
+            }
+
+            return;
+        }
+
+        this.$_callbacks.delete(event);
     }
 
     /**

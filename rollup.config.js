@@ -6,6 +6,8 @@ import pkg from './package.json';
 
 const libraryName = 'RiotSak';
 
+const globals = {};
+
 export default [
     {
         input: 'lib/index.ts',
@@ -13,7 +15,14 @@ export default [
 
             del({ targets: 'dist/*' }),
 
-            typescript({ useTsconfigDeclarationDir: true }),
+            typescript({
+                useTsconfigDeclarationDir: true,
+                tsconfigOverride: {
+                    compilerOptions: {
+                        module: 'esnext'
+                    }
+                }
+            }),
 
             terser(),
         ],
