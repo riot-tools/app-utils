@@ -30,12 +30,25 @@ describe('Meta', function () {
             onAsyncRendering: original
         };
 
-
         hook(component, override);
 
         component.onAsyncRendering();
 
         expect(original.calledOnce).to.be.true;
+        expect(override.calledOnce).to.be.true;
+    });
+
+    it('should not error if hook does not exist', () => {
+
+        const override = sinon.stub();
+
+        const hook = mkHook('onAsyncRendering');
+
+        const component: any = {};
+
+        hook(component, override);
+
+        expect(() => component.onAsyncRendering()).not.to.throw();
         expect(override.calledOnce).to.be.true;
     });
 

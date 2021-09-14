@@ -40,11 +40,11 @@ export const mkHook = (hook: RiotHookComponent): MakeHook => (
 
         component[hook] = function (...args) {
 
-            !runAfter && original.call(this, ...args);
+            !runAfter && original?.call(this, ...args);
 
             fn.call(this, ...args);
 
-            runAfter && original.call(this, ...args);
+            runAfter && original?.call(this, ...args);
         };
     }
 );
