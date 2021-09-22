@@ -4,7 +4,7 @@
   "description": "Swiss army knife toolkit for Riotjs",
   "main": "dist/umd.js",
   "module": "dist/es.js",
-  "browser": "dist/iife.js",
+  "cdn": "dist/iife.js",
   "typings": "dist/types/index.d.ts",
   "author": "Danilo Alonso <danilo@alonso.network>",
   "license": "MIT",
