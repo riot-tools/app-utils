@@ -63,27 +63,31 @@ export const $ = (selector: string, ctx?: HTMLElement): Element[] => {
     return Array.from(elements);
 };
 
-class HtmlEvents {
 
-    _split = e => e.split(/\s/);
+type ManyElements = Element|Element[];
 
-    _elements(els: Element|Element[]) {
-        if (!Array.isArray(els)) {
+const _itemsToArray = <T>(els: T|T[]): T[] => {
 
-            els = [els];
-        }
+    if (!Array.isArray(els)) {
 
-        return els;
+        els = [els as T];
     }
 
-    _eachEvent (events: string, callback: Function) {
+    return els;
+}
+
+export class HtmlEvents {
+
+    static _split = e => e.split(/\s/);
+
+    static _eachEvent (events: string, callback: Function) {
 
         this._split(events).forEach(callback);
     }
 
-    _eachElement(els: Element|Element[], evs: string, callback: Function) {
+    static _eachElement(els: ManyElements, evs: string, callback: Function) {
 
-        const elements = this._elements(els);
+        const elements = _itemsToArray(els);
 
         for (const element of elements) {
 
@@ -95,7 +99,7 @@ class HtmlEvents {
     }
 
 
-    on(els: Element|Element[], events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static on(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
@@ -103,7 +107,7 @@ class HtmlEvents {
         });
     }
 
-    one(els: Element|Element[], events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static one(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
@@ -114,7 +118,7 @@ class HtmlEvents {
         });
     }
 
-    off(els: Element|Element[], events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static off(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
@@ -123,4 +127,129 @@ class HtmlEvents {
     }
 }
 
-export const htmlEvents = new HtmlEvents();
+type StringProps = { [key: string]: string };
+
+export class HtmlAttr {
+
+
+    static get(els: ManyElements, name: string): string|string[] {
+
+        let elements = _itemsToArray(els);
+
+        const result = [...elements].map(el => (el as Element).getAttribute(name))
+
+        if (result.length === 1) {
+            return result[0]
+        }
+
+        return result;
+    }
+
+    static set(els: ManyElements, props: StringProps): ManyElements {
+
+        const elements = _itemsToArray(els);
+        const entries = Object.entries(props);
+
+        for (const [key, value] of entries) {
+
+            elements.forEach((el) => (el as Element).setAttribute(key, value));
+        }
+
+        return elements as Element[];
+    }
+
+
+    static remove(els: ManyElements, names: string|string[]) {
+
+        const elements = _itemsToArray(els);
+
+        names = _itemsToArray(names);
+
+        const props = names.reduce((list, prop) => {
+
+            list[prop] = '';
+            return list;
+        }, {});
+
+        this.set(els, props);
+
+        return elements;
+    }
+
+    static has(els: ManyElements, name: string): boolean|boolean[] {
+
+        let elements = _itemsToArray(els);
+
+        const result = [...elements].map(el => (el as Element).hasAttribute(name))
+
+        if (result.length === 1) {
+            return result[0]
+        }
+
+        return result;
+    }
+}
+
+export class HtmlCss {
+
+
+    static _sanitize(name) {
+
+        return name === 'float' ? 'cssFloat' : name.replace(/(.+)-(.)/, (s, m1, m2) => m1 + m2.toUpperCase());
+    }
+
+    static get(els: ManyElements, names: string|string[]): object|object[] {
+
+        const elements = _itemsToArray(els);
+        const properties = _itemsToArray(names);
+
+        const result = [...elements].map(el => properties.reduce((list, prop) => {
+
+            prop = this._sanitize(prop);
+            const style = window.getComputedStyle(el);
+            list[prop] = style[prop];
+
+            return list;
+        }, {}))
+
+        if (result.length === 1) {
+            return result[0]
+        }
+
+        return result;
+    }
+
+    static set(els: ManyElements, props: StringProps): ManyElements {
+
+        const elements = _itemsToArray(els);
+        const entries = Object.entries(props);
+
+        for (const [key, value] of entries) {
+
+            const prop = this._sanitize(key);
+            elements.map((el) => (el as HTMLElement).style[prop] = value);
+        }
+
+        return elements;
+    }
+
+
+    static remove(els: ManyElements, names: string|string[]) {
+
+        const elements = _itemsToArray(els);
+
+        names = typeof names === 'string' ? [names] : names;
+
+        const props = names.reduce((list, prop) => {
+
+            prop = this._sanitize(prop);
+            list[prop] = '';
+            return list;
+        }, {});
+
+        this.set(els, props);
+
+        return elements;
+    }
+
+}
