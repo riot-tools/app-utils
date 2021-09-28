@@ -18,30 +18,43 @@ const _itemsToArray = <T>(els: T | T[]): T[] => {
     }
 
     return els;
-}
+};
 
+const _split = e => e.split(/\s/);
 export class HtmlEvents {
 
-    static _split = e => e.split(/\s/);
 
-    static _eachEvent(events: string, callback: Function) {
+    private static _eachItem(events: string, callback: Function) {
 
-        this._split(events).forEach(callback);
+        _split(events).forEach(callback);
     }
 
-    static _eachElement(els: ManyElements, evs: string, callback: Function) {
+    private static _eachElement(els: ManyElements, evs: string, callback: Function) {
 
         const elements = _itemsToArray(els);
 
         for (const element of elements) {
 
-            this._eachEvent(evs, (event) => (
+            this._eachItem(evs, (event) => (
 
                 callback(element, event)
             ));
         }
     }
 
+    /**
+     * Adds event listeners to dom event interfaces
+     * @param els list of html elements
+     * @param events events separated by space
+     * @param callback
+     * @param opts options to pass to addEventListener
+     *
+     * @example
+     *
+     * HtmlEvents.on(div, 'click', () => {});
+     * HtmlEvents.on(div, 'focus blur', () => {});
+     * HtmlEvents.on([div, input], 'focus blur', () => {});
+     */
     static on(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
@@ -50,6 +63,19 @@ export class HtmlEvents {
         });
     }
 
+    /**
+     * Adds event listeners to dom event interfaces that only run once
+     * @param els list of html elements
+     * @param events events separated by space
+     * @param callback
+     * @param opts options to pass to addEventListener
+     *
+     * @example
+     *
+     * HtmlEvents.one(div, 'click', () => {});
+     * HtmlEvents.one(div, 'focus blur', () => {});
+     * HtmlEvents.one([div, input], 'focus blur', () => {});
+     */
     static one(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
@@ -61,6 +87,19 @@ export class HtmlEvents {
         });
     }
 
+    /**
+     * Removes event listeners on dom event interfaces
+     * @param els list of html elements
+     * @param events events separated by space
+     * @param callback
+     * @param opts options to pass to addEventListener
+     *
+     * @example
+     *
+     * HtmlEvents.off(div, 'click', callback);
+     * HtmlEvents.off(div, 'focus blur', callback);
+     * HtmlEvents.off([div, input], 'focus blur', callback);
+     */
     static off(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
@@ -69,6 +108,12 @@ export class HtmlEvents {
         });
     }
 
+    /**
+     *
+     * @param els list of html elements
+     * @param event a single event
+     * @param data Optional data to pass via `event.detail`
+     */
     static trigger(els: ManyElements, event: string | Event, data?: any) {
 
         const elements = _itemsToArray(els) as HTMLElement[];
@@ -87,12 +132,51 @@ export class HtmlEvents {
 
 type StringProps = { [key: string]: string };
 
+
+// TODO: This should be similar to events where _eachItem and _eachElement
+// TODO: are the things that handle iterating over props or elements
 export class HtmlAttr {
 
+    private static _eachItem(propNames: string, callback: Function) {
 
+        return _split(propNames).map(callback);
+    }
+
+    private static _eachElement(els: ManyElements, propNames: string, callback: Function) {
+
+        const elements = _itemsToArray(els);
+
+        return elements.map((element) => this._eachItem(propNames, (props: string[]) => (
+
+        )));
+
+        for (const element of elements) {
+
+            this._eachItem(propNames, (event) => (
+
+                callback(element, event)
+            ));
+        }
+    }
+
+    /**
+     * Returns attributes on one or many html elements
+     * @param els list of html elements
+     * @param name attribute
+     *
+     * @example
+     *
+     * HtmlAttr.get(form, 'method');
+     * // > 'post'
+     *
+     * HtmlAttr.get([select, input], 'name');
+     * // > ['role', 'full_name']
+     */
     static get(els: ManyElements, name: string): string | string[] {
 
         let elements = _itemsToArray(els);
+
+
 
         const result = [...elements].map(el => (el as Element).getAttribute(name))
 
@@ -154,7 +238,7 @@ export class HtmlCss {
      * Sanitize css properties; Kebab case to camel case.
      * @param name css property
      */
-    static _sanitize(name: string): string {
+     private static _sanitize(name: string): string {
 
         const isFloat = name === 'float';
 
@@ -167,14 +251,29 @@ export class HtmlCss {
     }
 
     /**
+     * Gets one or many css properties from one or many html elements.
+     * @param els list of html elements
+     * @param propNames property name or array of property names
      *
-     * @param els list of elements
-     * @param names
+     * @example
+     *
+     * HtmlCss.get(div, 'color');
+     * // > 'red'
+     *
+     * HtmlCss.get([div, span], 'color');
+     * // > ['red', 'blue']
+     *
+     * HtmlCss.get(div, ['color', 'fontSize']);
+     * // > { color: 'red', fontSize: '12px' }
+     *
+     * HtmlCss.get([div, span], ['color', 'fontSize']);
+     * // > [{ color: 'red', fontSize: '12px' }, { color: 'blue', fontSize: '10px' }]
+     *
      */
-    static get(els: ManyElements, names: string | string[]): string | object | object[] {
+    static get(els: ManyElements, propNames: string | string[]): string | object | object[] {
 
         const elements = _itemsToArray(els);
-        const properties = _itemsToArray(names);
+        const properties = _itemsToArray(propNames);
 
         let result = [...elements].map(el => properties.reduce((list, prop) => {
 
@@ -197,6 +296,23 @@ export class HtmlCss {
         return result;
     }
 
+    /**
+     *
+     * @param els list of html elements
+     * @param props CSS style props (div.style.fontSize);
+     *
+     * @example
+     *
+     * HtmlCss.set([div, span], {
+     *      color: 'blue',
+     *      paddingRight: '10px'
+     * });
+     *
+     * HtmlCss.set(div, {
+     *      color: 'blue',
+     *      paddingRight: '10px'
+     * });
+     */
     static set(els: ManyElements, props: Partial<CSSStyleDeclaration>): ManyElements {
 
         const elements = _itemsToArray(els);
@@ -211,13 +327,25 @@ export class HtmlCss {
         return elements as Element[];
     }
 
-    static remove(els: ManyElements, names: string | string[]) {
+    /**
+     * Removes properties from html elements
+     * @param els list of html elements
+     * @param propNames property name or array of property names
+     *
+     * @example
+     *
+     * HtmlCss.remove(div, 'color');
+     * HtmlCss.remove([div, span], 'color');
+     * HtmlCss.remove(div, ['color', 'fontSize']);
+     * HtmlCss.remove([div, span], ['color', 'fontSize']);
+     */
+    static remove(els: ManyElements, propNames: string | string[]) {
 
         const elements = _itemsToArray(els);
 
-        names = typeof names === 'string' ? [names] : names;
+        propNames = typeof propNames === 'string' ? [propNames] : propNames;
 
-        const props = names.reduce((list, prop) => {
+        const props = propNames.reduce((list, prop) => {
 
             prop = this._sanitize(prop);
             list[prop] = '';

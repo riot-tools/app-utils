@@ -216,7 +216,7 @@ describe('HtmlEvents', () => {
     afterEach(() => {
 
         sinon.resetBehavior();
-    })
+    });
 
     it('should add a single event', () => {
 
