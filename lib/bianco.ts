@@ -8,7 +8,7 @@ export const $ = (selector: string, ctx?: Element): Element[] => {
 };
 
 
-type ManyElements = Element | Element[];
+type ManyElements = Element | Element[] | NodeListOf<Element>;
 
 const _itemsToArray = <T>(els: T | T[]): T[] => {
 
@@ -42,7 +42,6 @@ export class HtmlEvents {
         }
     }
 
-
     static on(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
@@ -68,6 +67,21 @@ export class HtmlEvents {
 
             element.removeEventListener(event, callback, opts || false);
         });
+    }
+
+    static trigger(els: ManyElements, event: string | Event, data?: any) {
+
+        const elements = _itemsToArray(els) as HTMLElement[];
+
+        for (const element of elements) {
+
+            if (typeof event === 'string') {
+
+                event = new window.CustomEvent(event, { detail: data });
+            }
+
+            element.dispatchEvent(event);
+        }
     }
 }
 
@@ -136,7 +150,10 @@ export class HtmlAttr {
 
 export class HtmlCss {
 
-
+    /**
+     * Sanitize css properties; Kebab case to camel case.
+     * @param name css property
+     */
     static _sanitize(name: string): string {
 
         const isFloat = name === 'float';
@@ -149,6 +166,11 @@ export class HtmlCss {
         return name.replace(/(.+)-(.)/, (_s, m1, m2) => m1 + m2.toUpperCase())
     }
 
+    /**
+     *
+     * @param els list of elements
+     * @param names
+     */
     static get(els: ManyElements, names: string | string[]): string | object | object[] {
 
         const elements = _itemsToArray(els);
@@ -157,7 +179,7 @@ export class HtmlCss {
         let result = [...elements].map(el => properties.reduce((list, prop) => {
 
             prop = this._sanitize(prop);
-            const style = global.window.getComputedStyle(el);
+            const style = global.window.getComputedStyle(el as HTMLElement);
             list[prop] = style[prop];
 
             return list;
@@ -186,9 +208,8 @@ export class HtmlCss {
             elements.map((el) => (el as HTMLElement).style[prop] = value);
         }
 
-        return elements;
+        return elements as Element[];
     }
-
 
     static remove(els: ManyElements, names: string | string[]) {
 

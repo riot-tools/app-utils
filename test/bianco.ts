@@ -220,21 +220,178 @@ describe('HtmlEvents', () => {
 
     it('should add a single event', () => {
 
-        const el = document.createElement('div');
+        const div = document.createElement('div');
         const listener = sinon.fake();
 
-        sinon.spy(el);
+        sinon.spy(div);
 
-        HtmlEvents.on(el, 'click', listener);
+        HtmlEvents.on(div, 'click', listener);
 
-        const addEventListener = el.addEventListener as sinon.SinonSpy;
+        const addEventListener = div.addEventListener as sinon.SinonSpy;
 
-        expect(
-            addEventListener.calledOnce
-        ).to.be.true;
-
-        expect(
-            addEventListener.calledWith('click', listener)
-        ).to.be.true
+        expect(addEventListener.calledOnce).to.be.true;
+        expect(addEventListener.calledWith('click', listener)).to.be.true;
     });
+
+    it('should add a single event to many elements', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+        sinon.spy(span);
+
+        HtmlEvents.on([div, span], 'click', listener);
+
+        const addEvents = [
+            div.addEventListener as sinon.SinonSpy,
+            span.addEventListener as sinon.SinonSpy
+        ];
+
+        for (const addEventListener of addEvents) {
+
+            expect(addEventListener.calledOnce).to.be.true;
+            expect(addEventListener.calledWith('click', listener)).to.be.true;
+        }
+    });
+
+    it('should add many events', () => {
+
+        const div = document.createElement('div');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+
+        HtmlEvents.on(div, 'click mousedown blur', listener);
+
+        const addEventListener = div.addEventListener as sinon.SinonSpy;
+
+        expect(addEventListener.calledThrice).to.be.true;
+        expect(addEventListener.calledWith('click', listener)).to.be.true;
+        expect(addEventListener.calledWith('mousedown', listener)).to.be.true;
+        expect(addEventListener.calledWith('blur', listener)).to.be.true;
+    });
+
+    it('should add many events to many elements', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+        sinon.spy(span);
+
+        HtmlEvents.on([div, span], 'click mousedown blur', listener);
+
+        const addEvents = [
+            div.addEventListener as sinon.SinonSpy,
+            span.addEventListener as sinon.SinonSpy
+        ];
+
+        for (const addEventListener of addEvents) {
+
+            expect(addEventListener.calledThrice).to.be.true;
+            expect(addEventListener.calledWith('click', listener)).to.be.true;
+            expect(addEventListener.calledWith('mousedown', listener)).to.be.true;
+            expect(addEventListener.calledWith('blur', listener)).to.be.true;
+        }
+    });
+
+    it('should remove a single event', () => {
+
+        const div = document.createElement('div');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+
+        HtmlEvents.on(div, 'click', listener);
+        HtmlEvents.off(div, 'click', listener);
+
+        const removeEventListener = div.removeEventListener as sinon.SinonSpy;
+
+        expect(removeEventListener.calledOnce).to.be.true;
+        expect(removeEventListener.calledWith('click', listener)).to.be.true;
+    });
+
+    it('should remove many events for many elements', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+        sinon.spy(span);
+
+        HtmlEvents.on([div, span], 'click mousedown blur', listener);
+        HtmlEvents.off([div, span], 'click mousedown blur', listener);
+
+        const addEvents = [
+            div.removeEventListener as sinon.SinonSpy,
+            span.removeEventListener as sinon.SinonSpy
+        ];
+
+        for (const removeEventListener of addEvents) {
+
+            expect(removeEventListener.calledThrice).to.be.true;
+            expect(removeEventListener.calledWith('click', listener)).to.be.true;
+            expect(removeEventListener.calledWith('mousedown', listener)).to.be.true;
+            expect(removeEventListener.calledWith('blur', listener)).to.be.true;
+        }
+    });
+
+    it('should trigger a single event with data', () => {
+
+        const div = document.createElement('div');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+
+        HtmlEvents.on(div, 'click', listener);
+        HtmlEvents.trigger(div, 'click', { data: true });
+
+        const dispatchEvent = div.dispatchEvent as sinon.SinonSpy;
+
+        expect(dispatchEvent.calledOnce).to.be.true;
+
+        const { args: [args] } = dispatchEvent.getCall(0);
+
+        expect(args).to.be.an.instanceOf(window.CustomEvent);
+
+        expect(args.detail).to.include({ data: true });
+        expect(listener.calledOnce).to.be.true;
+    });
+
+    it('should only trigger an event once', () => {
+
+        const div = document.createElement('div');
+        const listener = sinon.fake();
+
+        sinon.spy(div);
+
+        HtmlEvents.one(div, 'click', listener);
+        HtmlEvents.trigger(div, 'click');
+        HtmlEvents.trigger(div, 'click');
+        HtmlEvents.trigger(div, 'click');
+
+        expect(listener.calledOnce).to.be.true;
+    });
+
+    it('should only trigger many event once on many elements', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        const listener = sinon.fake();
+
+        HtmlEvents.one([div, span], 'click blur focus', listener);
+        HtmlEvents.trigger([div, span], 'click');
+        HtmlEvents.trigger([div, span], 'click');
+        HtmlEvents.trigger([div, span], 'blur');
+        HtmlEvents.trigger([div, span], 'blur');
+        HtmlEvents.trigger([div, span], 'focus');
+        HtmlEvents.trigger([div, span], 'focus');
+
+        expect(listener.callCount).to.eq(6);
+    });
+
 });
