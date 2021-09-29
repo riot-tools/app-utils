@@ -130,39 +130,38 @@ export class HtmlEvents {
     }
 }
 
-type StringProps = { [key: string]: string };
+interface StringProps { [key: string]: string };
+interface BoolProps { [key: string]: boolean };
 
 
 // TODO: This should be similar to events where _eachItem and _eachElement
 // TODO: are the things that handle iterating over props or elements
 export class HtmlAttr {
 
-    private static _eachItem(propNames: string, callback: Function) {
+    private static _eachItem(propNames: string[] | string[][], callback: Function) {
 
-        return _split(propNames).map(callback);
+        return propNames.map(item => callback(item));
     }
 
-    private static _eachElement(els: ManyElements, propNames: string, callback: Function) {
+    private static _eachElement(
+        els: ManyElements,
+        propNames: string | string[] | string[][],
+        callback: (element: Element, prop: string | [string, string]) => unknown
+    ) {
 
-        const elements = _itemsToArray(els);
+        const elements = _itemsToArray(els) as Element[];
+        const props = _itemsToArray(propNames as string);
 
-        return elements.map((element) => this._eachItem(propNames, (props: string[]) => (
+        return elements.map((element) => this._eachItem(props, (prop: string) => (
 
+            callback(element, prop)
         )));
-
-        for (const element of elements) {
-
-            this._eachItem(propNames, (event) => (
-
-                callback(element, event)
-            ));
-        }
     }
 
     /**
      * Returns attributes on one or many html elements
      * @param els list of html elements
-     * @param name attribute
+     * @param propNames attribute
      *
      * @example
      *
@@ -171,64 +170,137 @@ export class HtmlAttr {
      *
      * HtmlAttr.get([select, input], 'name');
      * // > ['role', 'full_name']
+     *
+     * HtmlAttr.get(form, ['method', 'action']);
+     * // > { method: 'post', action: '/' }
+     *
+     * HtmlAttr.get([select, input], ['name', 'value']);
+     * // > [{ name: '', value: '' }, { name: '', value: '' }]
      */
-    static get(els: ManyElements, name: string): string | string[] {
+    static get(
+        els: ManyElements,
+        propNames: string | string[]): (
+            string | string[] |
+            StringProps | StringProps[]
+        )
+    {
 
-        let elements = _itemsToArray(els);
+        const results = this._eachElement(
+            els,
+            propNames,
+            function (element, prop) {
 
+                return [prop, element.getAttribute(prop as string)];
+            }
+        ).map((props) => {
 
+            if (props.length > 1) {
 
-        const result = [...elements].map(el => (el as Element).getAttribute(name))
+                return Object.fromEntries(props);
+            }
 
-        if (result.length === 1) {
-            return result[0]
+            return props[0][1];
+        });
+
+        if (results.length === 1) {
+            return results[0]
         }
 
-        return result;
+        return results;
     }
 
+    /**
+     *
+     * @param els
+     * @param props
+     *
+     * @example
+     *
+     * HtmlAttr.set(input, { name: 'full_name' });
+     * HtmlAttr.set([div, div, div], { 'data-show': 'false' });
+     */
     static set(els: ManyElements, props: StringProps): ManyElements {
 
-        const elements = _itemsToArray(els);
-        const entries = Object.entries(props);
+        this._eachElement(
+            els,
+            Object.entries(props),
+            (element, [name, value]) => {
 
-        for (const [key, value] of entries) {
+                element.setAttribute(name, value);
+            }
+        );
 
-            elements.forEach((el) => (el as Element).setAttribute(key, value));
-        }
-
-        return elements as Element[];
+        return els;
     }
 
 
-    static remove(els: ManyElements, names: string | string[]) {
+    static remove(els: ManyElements, propNames: string | string[]) {
 
-        const elements = _itemsToArray(els);
 
-        names = _itemsToArray(names);
+        this._eachElement(
+            els,
+            propNames,
+            (element, prop) => {
 
-        const props = names.reduce((list, prop) => {
+                element.removeAttribute(prop as string);
+            }
+        );
 
-            list[prop] = '';
-            return list;
-        }, {});
-
-        this.set(els, props);
-
-        return elements;
+        return els;
     }
 
-    static has(els: ManyElements, name: string): boolean | boolean[] {
+    /**
+     *
+     * @param els
+     * @param propNames
+     *
+     * HtmlAttr.has(form, 'method');
+     * // > true
+     *
+     * HtmlAttr.has([select, input], 'name');
+     * // > [true, true]
+     *
+     * HtmlAttr.has(form, ['method', 'action']);
+     * // > { method: true, action: true }
+     *
+     * HtmlAttr.has([select, input], ['name', 'value']);
+     * // > [{ name: true, value: true }, { name: true, value: true }]
+     */
+    static has(
+        els: ManyElements,
+        propNames: string | string[]
+    ): (
+        boolean | boolean[] |
+        BoolProps | BoolProps[]
+    ) {
 
-        let elements = _itemsToArray(els);
 
-        const result = [...elements].map(el => (el as Element).hasAttribute(name))
+        const _result: unknown = this._eachElement(
+            els,
+            propNames,
+            (element, prop) => (
+
+                [prop, element.hasAttribute(prop as string)]
+            )
+        );
+
+        const result = (
+            _result as [string, boolean][][]
+        ).map((props) => {
+
+            if (props.length > 1) {
+
+                return Object.fromEntries(props);
+            }
+
+            return props[0][1];
+        })
 
         if (result.length === 1) {
             return result[0]
         }
 
-        return result;
+        return result as boolean[] | BoolProps[];
     }
 }
 

@@ -78,7 +78,7 @@ describe('HtmlCss', function () {
         fontSize: '12px'
     }
 
-    it('it can set a style attribute', function() {
+    it('it can set a style attribute', function () {
 
         const div = document.createElement('div');
         HtmlCss.set(div, stub.sampleCss);
@@ -87,7 +87,7 @@ describe('HtmlCss', function () {
         expect(div.style.color).to.equal(stub.sampleCss.color);
     });
 
-    it('it can set a style attribute on multiple nodes', function() {
+    it('it can set a style attribute on many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
@@ -100,7 +100,7 @@ describe('HtmlCss', function () {
         expect(span.style.color).to.equal(stub.sampleCss.color);
     });
 
-    it('it can get style attributes', function() {
+    it('it can get style attributes', function () {
 
         const div = document.createElement('div');
         HtmlCss.set(div, stub.sampleCss);
@@ -109,20 +109,20 @@ describe('HtmlCss', function () {
 
     });
 
-    it('it can get style attributes on multiple nodes', function() {
+    it('it can get style attributes on many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
 
         HtmlCss.set([div, span], stub.sampleCss);
 
-        const result = HtmlCss.get([div , span], 'color');
+        const result = HtmlCss.get([div, span], 'color');
 
         expect(result[0]).to.include(stub.sampleCss.color);
         expect(result[1]).to.include(stub.sampleCss.color);
     });
 
-    it('it can get multiple style attributes', function() {
+    it('it can get many style attributes', function () {
 
         const div = document.createElement('div');
         HtmlCss.set(div, stub.sampleCss);
@@ -131,7 +131,7 @@ describe('HtmlCss', function () {
 
     });
 
-    it('it can get multiple style attributes on multiple nodes', function() {
+    it('it can get many style attributes on many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
@@ -143,7 +143,7 @@ describe('HtmlCss', function () {
         expect(results[1]).to.include(stub.sampleCss);
     });
 
-    it('it can remove style attributes', function() {
+    it('it can remove style attributes', function () {
 
         const div = document.createElement('div');
         HtmlCss.set(div, stub.sampleCss);
@@ -153,26 +153,26 @@ describe('HtmlCss', function () {
         expect(div.style.color).to.be.empty;
     });
 
-    it('it can remove style attributes from multiple nodes', function() {
+    it('it can remove style attributes from many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
         HtmlCss.set([div, span], stub.sampleCss);
 
-        HtmlCss.remove([div ,span], 'color');
+        HtmlCss.remove([div, span], 'color');
 
         expect(div.style.color).to.be.empty;
         expect(span.style.color).to.be.empty;
 
     });
 
-    it('it can remove multiple style attributes from multiple nodes', function() {
+    it('it can remove many style attributes from many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
         HtmlCss.set([div, span], stub.sampleCss);
 
-        HtmlCss.remove([div ,span], Object.keys(stub.sampleCss));
+        HtmlCss.remove([div, span], Object.keys(stub.sampleCss));
 
         expect(div.style.color).to.be.empty;
         expect(div.style.fontSize).to.be.empty;
@@ -182,9 +182,9 @@ describe('HtmlCss', function () {
 });
 
 
-describe('Bianco query ($)', function() {
+describe('Bianco query ($)', function () {
 
-    before(function() {
+    before(function () {
         const div = document.createElement('div')
 
         div.innerHTML = `
@@ -196,14 +196,14 @@ describe('Bianco query ($)', function() {
         document.body.appendChild(div)
     });
 
-    it('It can query the DOM properly', function() {
+    it('It can query the DOM properly', function () {
         const div = $('div')
         expect(Array.isArray(div)).to.equal(true);
         expect(div.length).to.equal(1);
         expect($('.item', div[0]).length).to.equal(2);
     });
 
-    it('No matched queries return empty arrays', function() {
+    it('No matched queries return empty arrays', function () {
         const els = $('.foo')
         expect(Array.isArray(els)).to.equal(true)
         expect(typeof els).to.equal('object')
@@ -393,5 +393,151 @@ describe('HtmlEvents', () => {
 
         expect(listener.callCount).to.eq(6);
     });
-
 });
+
+describe('HtmlAttr', () => {
+
+    it('it can set an attribute', () => {
+
+        const div = document.createElement('div');
+        HtmlAttr.set(div, { hidden: 'true' })
+
+        expect(div.getAttribute('hidden')).to.equal('true');
+    });
+
+    it('it can set an attribute on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        HtmlAttr.set([div, span], { hidden: 'true' })
+
+        expect(div.getAttribute('hidden')).to.equal('true');
+        expect(span.getAttribute('hidden')).to.equal('true');
+    });
+
+    it('it can set many attributes', () => {
+
+        const div = document.createElement('div');
+        HtmlAttr.set(div, { hidden: 'true', data: 'false' });
+
+        expect(div.getAttribute('hidden')).to.equal('true');
+        expect(div.getAttribute('data')).to.equal('false');
+    });
+
+    it('it can set many attributes on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        HtmlAttr.set([div, span], { hidden: 'true', data: 'false' });
+
+        expect(div.getAttribute('hidden')).to.equal('true');
+        expect(div.getAttribute('data')).to.equal('false');
+
+        expect(span.getAttribute('hidden')).to.equal('true');
+        expect(span.getAttribute('data')).to.equal('false');
+    });
+
+    it('it can get attributes', () => {
+
+        const div = document.createElement('div');
+        HtmlAttr.set(div, { hidden: 'true' })
+
+        expect(HtmlAttr.get(div, 'hidden')).to.equal('true');
+    });
+
+    it('it can get attributes on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('div');
+        HtmlAttr.set([div, span], { hidden: 'true' })
+
+        const result = HtmlAttr.get([div, span], 'hidden');
+        expect(result[0]).to.equal('true');
+        expect(result[1]).to.equal('true');
+    });
+
+
+    it('it can get many attributes on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('div');
+
+        const attrs = {
+            hidden: 'true',
+            data: 'false'
+        };
+
+        HtmlAttr.set([div, span], attrs)
+
+        const result = HtmlAttr.get([div, span], ['hidden', 'data']);
+
+        expect(result[0]).to.include(attrs);
+        expect(result[1]).to.include(attrs);
+    });
+
+    it('it can remove attributes', () => {
+
+        const div = document.createElement('div');
+        HtmlAttr.set(div, { hidden: 'true' })
+
+        HtmlAttr.remove(div, 'hidden');
+
+        expect(div.getAttribute('hidden')).to.equal(null);
+    });
+
+    it('it can remove attributes from many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('div');
+
+        HtmlAttr.set([div, span], { hidden: 'true', data: 'false' })
+        HtmlAttr.remove([div, span], ['hidden', 'data']);
+
+        const result = HtmlAttr.get([div, span], ['hidden', 'data']);
+
+        const nope = {
+            hidden: null,
+            data: null
+        };
+
+        expect(result[0]).to.include(nope);
+        expect(result[1]).to.include(nope);
+    });
+
+    it('it can detect attributes', () => {
+
+        const div = document.createElement('div');
+        HtmlAttr.set(div, { hidden: 'true' })
+
+        expect(HtmlAttr.has(div, 'hidden')).to.equal(true);
+        expect(HtmlAttr.has(div, 'poops')).to.equal(false);
+    });
+
+    it('it can detect attributes on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        HtmlAttr.set([div, span], { hidden: 'true' })
+
+        const result = HtmlAttr.has([div, span], 'hidden');
+        expect(result[0]).to.equal(true);
+        expect(result[1]).to.equal(true);
+    });
+
+    it('it can detect many attributes on many nodes', () => {
+
+        const div = document.createElement('div');
+        const span = document.createElement('span');
+        HtmlAttr.set([div, span], { hidden: 'true', data: 'false' })
+
+        const attrs = {
+            hidden: true,
+            data: true
+        };
+
+        const result = HtmlAttr.has([div, span], ['hidden', 'data']);
+        expect(result[0]).to.include(attrs);
+        expect(result[1]).to.include(attrs);
+    });
+
+})
