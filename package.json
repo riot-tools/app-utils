@@ -1,6 +1,6 @@
 {
   "name": "@riot-tools/sak",
-  "version": "0.0.0",
+  "version": "1.4.2",
   "description": "Swiss army knife toolkit for Riotjs",
   "main": "dist/umd.js",
   "module": "dist/es.js",
