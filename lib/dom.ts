@@ -26,7 +26,7 @@ export const formSubmitClone = (
     });
 };
 
-export const appendMany = (root: HTMLElement, ...children: HTMLElement[]) => {
+export const appendMany = (root: Element, ...children: Element[]) => {
 
     while (children.length) {
 
@@ -36,7 +36,7 @@ export const appendMany = (root: HTMLElement, ...children: HTMLElement[]) => {
     }
 };
 
-export const displayBlock = (el: HTMLElement, visible: boolean) => HtmlCss.set(el, { display: visible ? 'block' : 'none' });
-export const setVisible = (el: HTMLElement, visible: boolean) => HtmlCss.set(el, { visibility: visible ? 'visible' : 'hidden' });
+export const displayBlock = (el: Element, visible: boolean) => HtmlCss.set(el, { display: visible ? 'block' : 'none' });
+export const setVisible = (el: Element, visible: boolean) => HtmlCss.set(el, { visibility: visible ? 'visible' : 'hidden' });
 
-export const isHtmlElement = (target: HTMLElement) => target instanceof HTMLElement;
+export const isHtmlElement = (target: Element) => target instanceof HTMLElement;

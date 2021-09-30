@@ -8,7 +8,7 @@ export const $ = (selector: string, ctx?: Element): Element[] => {
 };
 
 
-type ManyElements = Element | Element[] | NodeListOf<Element>;
+type ManyElements = EventTarget | EventTarget[] | NodeListOf<Element>;
 
 const _itemsToArray = <T>(els: T | T[]): T[] => {
 
@@ -128,14 +128,20 @@ export class HtmlEvents {
             element.dispatchEvent(event);
         }
     }
-}
+};
 
 interface StringProps { [key: string]: string };
 interface BoolProps { [key: string]: boolean };
 
+const oneOrMany = <T extends { length: number }>(items: T): T => {
 
-// TODO: This should be similar to events where _eachItem and _eachElement
-// TODO: are the things that handle iterating over props or elements
+    if (items.length === 1) {
+        return items[0]
+    }
+
+    return items;
+};
+
 export class HtmlAttr {
 
     private static _eachItem(propNames: string[] | string[][], callback: Function) {
@@ -177,36 +183,32 @@ export class HtmlAttr {
      * HtmlAttr.get([select, input], ['name', 'value']);
      * // > [{ name: '', value: '' }, { name: '', value: '' }]
      */
-    static get(
-        els: ManyElements,
-        propNames: string | string[]): (
-            string | string[] |
-            StringProps | StringProps[]
-        )
-    {
+    static get(els: ManyElements, propNames: string |  string[]): (
+        string | string[] |
+        StringProps | StringProps[]
+    ) {
 
-        const results = this._eachElement(
+        const entries = this._eachElement(
             els,
             propNames,
             function (element, prop) {
 
                 return [prop, element.getAttribute(prop as string)];
             }
-        ).map((props) => {
+        );
 
-            if (props.length > 1) {
+        if (typeof propNames === 'string') {
 
-                return Object.fromEntries(props);
-            }
+            const results = entries.map((props) => props[0][1]) as string[];
 
-            return props[0][1];
-        });
-
-        if (results.length === 1) {
-            return results[0]
+            return oneOrMany(results);
         }
 
-        return results;
+        if (Array.isArray(propNames)) {
+
+            const results = entries.map((props) => Object.fromEntries(props)) as StringProps[];
+            return oneOrMany(results);
+        }
     }
 
     /**
@@ -275,7 +277,7 @@ export class HtmlAttr {
     ) {
 
 
-        const _result: unknown = this._eachElement(
+        const entries = this._eachElement(
             els,
             propNames,
             (element, prop) => (
@@ -284,23 +286,20 @@ export class HtmlAttr {
             )
         );
 
-        const result = (
-            _result as [string, boolean][][]
-        ).map((props) => {
 
-            if (props.length > 1) {
+        if (typeof propNames === 'string') {
 
-                return Object.fromEntries(props);
-            }
+            const results = entries.map((props) => props[0][1]) as boolean[];
 
-            return props[0][1];
-        })
-
-        if (result.length === 1) {
-            return result[0]
+            return oneOrMany(results);
         }
 
-        return result as boolean[] | BoolProps[];
+        if (Array.isArray(propNames)) {
+
+            const results = entries.map((props) => Object.fromEntries(props)) as BoolProps[];
+            return oneOrMany(results);
+        }
+
     }
 }
 
@@ -342,7 +341,7 @@ export class HtmlCss {
      * // > [{ color: 'red', fontSize: '12px' }, { color: 'blue', fontSize: '10px' }]
      *
      */
-    static get(els: ManyElements, propNames: string | string[]): string | object | object[] {
+    static get(els: ManyElements, propNames: string | string[]): string | Partial<CSSStyleDeclaration> | Partial<CSSStyleDeclaration>[] {
 
         const elements = _itemsToArray(els);
         const properties = _itemsToArray(propNames);
@@ -361,11 +360,7 @@ export class HtmlCss {
             result = result.map(value => value[properties[0]]);
         }
 
-        if (result.length === 1) {
-            return result[0];
-        }
-
-        return result;
+        return oneOrMany(result);
     }
 
     /**

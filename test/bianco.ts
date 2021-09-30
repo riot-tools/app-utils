@@ -452,6 +452,7 @@ describe('HtmlAttr', () => {
         HtmlAttr.set([div, span], { hidden: 'true' })
 
         const result = HtmlAttr.get([div, span], 'hidden');
+
         expect(result[0]).to.equal('true');
         expect(result[1]).to.equal('true');
     });
