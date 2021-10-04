@@ -21,8 +21,18 @@ const _itemsToArray = <T>(els: T | T[]): T[] => {
 };
 
 const _split = e => e.split(/\s/);
-export class HtmlEvents {
 
+type DomEvent = (
+    EventModifierInit |
+    KeyboardEvent |
+    MouseEvent |
+    TouchEvent
+);
+interface EventCallback {
+    <T extends DomEvent>(event: T): any;
+}
+
+export class HtmlEvents {
 
     private static _eachItem(events: string, callback: Function) {
 
@@ -55,7 +65,7 @@ export class HtmlEvents {
      * HtmlEvents.on(div, 'focus blur', () => {});
      * HtmlEvents.on([div, input], 'focus blur', () => {});
      */
-    static on(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static on(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
@@ -76,7 +86,7 @@ export class HtmlEvents {
      * HtmlEvents.one(div, 'focus blur', () => {});
      * HtmlEvents.one([div, input], 'focus blur', () => {});
      */
-    static one(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static one(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
@@ -100,7 +110,7 @@ export class HtmlEvents {
      * HtmlEvents.off(div, 'focus blur', callback);
      * HtmlEvents.off([div, input], 'focus blur', callback);
      */
-    static off(els: ManyElements, events: string, callback: EventListenerOrEventListenerObject, opts?: EventListenerOptions) {
+    static off(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
 
         this._eachElement(els, events, (element, event) => {
 
