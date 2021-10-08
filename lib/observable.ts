@@ -36,18 +36,11 @@ export type ObservableInstanceChild = ObservedComponent & Cleanup
 
 export type ObservableInstance<T> = ObservedComponent & {
     observe: Observable<T>['observe'],
-    $_spy?: ObserverSpy;
+    $_spy?: ObserverSpy<T>;
     $_ref?: String;
     $_observer: Observable<T>
 }
 
-
-const freezeProp = () => ({
-
-    enumerable: false,
-    writable: false,
-    configurable: false,
-})
 
 /**
  * Defines an object's properties and makes them non-enumerable
@@ -55,10 +48,11 @@ const freezeProp = () => ({
  * @param value
  * @returns object define property values
  */
-const defineOpts = (value: any, more?: any) => ({
+const defineOpts = <T>(value: T, configurable = false) => ({
 
-    ...freezeProp(),
-    ...(more || {}),
+    enumerable: false,
+    writable: false,
+    configurable,
     value
 });
 
@@ -70,13 +64,13 @@ type OberverSpyOptions = {
     args?: any[],
 };
 
-type ObserverSpyEvent = OberverSpyOptions & {
+type ObserverSpyEvent<T> = OberverSpyOptions & {
     fn: ObservableFunctionName,
-    context: Observable<any>
+    context: Observable<T>
 }
 
-interface ObserverSpy {
-    (event: ObserverSpyEvent): void
+interface ObserverSpy<T> {
+    (event: ObserverSpyEvent<T>): void
 }
 
 const sendToSpy = (
@@ -101,9 +95,9 @@ const sendToSpy = (
     }
 }
 
-type ObservableOptions = {
+type ObservableOptions<T> = {
     ref?: string,
-    spy?: Function
+    spy?: ObserverSpy<T>
 };
 
 const validator = new OptionsValidator({
@@ -115,10 +109,10 @@ export class Observable<T> {
 
     $_callbacks: EventCallbacksMap = new Map();
     $_target: any = null;
-    $_spy?: ObserverSpy;
+    $_spy?: ObserverSpy<T>;
     $_ref?: String;
 
-    constructor(target?: T, options?: ObservableOptions) {
+    constructor(target?: T, options?: ObservableOptions<T>) {
 
         const self = this;
         this.$_target = target || this;
@@ -132,8 +126,8 @@ export class Observable<T> {
             observe: defineOpts(this.observe),
             $_callbacks: defineOpts(this.$_callbacks),
             $_target: defineOpts(this.$_target),
-            $_spy: defineOpts(this.$_spy, { configurable: true }),
-            $_ref: defineOpts(this.$_ref, { configurable: true })
+            $_spy: defineOpts(this.$_spy, true),
+            $_ref: defineOpts(this.$_ref, true)
         });
 
         // Validate option if exists

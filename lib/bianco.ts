@@ -22,14 +22,9 @@ const _itemsToArray = <T>(els: T | T[]): T[] => {
 
 const _split = e => e.split(/\s/);
 
-type DomEvent = (
-    EventModifierInit |
-    KeyboardEvent |
-    MouseEvent |
-    TouchEvent
-);
+type DomEvent = KeyboardEventInit & MouseEventInit & TouchEventInit;
 interface EventCallback {
-    <T extends DomEvent>(event: T): any;
+    (event: DomEvent): any;
 }
 
 export class HtmlEvents {

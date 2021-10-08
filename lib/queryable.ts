@@ -1,8 +1,8 @@
 import { RiotComponent } from 'riot';
-import { mergeState, makeOnBeforeMount } from './meta';
+import { mergeState } from './meta';
 
 interface SetFetchingFunction {
-    (fn: Function): object|Error;
+    <T extends Function>(fn: T): object|Error;
 }
 
 export interface QueryableComponent {
@@ -33,11 +33,11 @@ export interface QueryableComponent {
  * @param component
  * @returns component with a fetchable interface
  */
-export const makeQueryable = function <T>(component: T) {
+export const makeQueryable = function <P = any, S = any, T>(component: T) {
 
-    const queryable = component as T & QueryableComponent & RiotComponent;
+    const queryable = component as T & QueryableComponent & RiotComponent<P, S>;
 
-    mergeState(queryable, {
+    mergeState <P, S, T>(queryable, {
         isFetching: false,
         fetchError: null
     });

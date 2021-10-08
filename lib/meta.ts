@@ -1,5 +1,20 @@
 import { RiotComponent } from "riot";
 
+type HookKeys =
+'onBeforeMount' |
+'onMounted' |
+'onBeforeUpdate' |
+'onUpdated' |
+'onBeforeUnmount' |
+'onUnmounted';
+
+type HookFunctions<P, S> = Pick<
+    RiotComponent<P, S>,
+    HookKeys
+>
+
+type RiotHookComponent<P, S> = HookFunctions<P, S>[keyof HookFunctions<P, S>]
+
 interface MakeHook {
 
     /**
@@ -8,18 +23,8 @@ interface MakeHook {
      * @param fn hook function
      * @param runAfter whether to run hook function before or after original
      */
-    <T>(component: T, fn: Function, runAfter?: boolean): void
+    <P, S, T>(component: T, fn: RiotHookComponent<P, S>, runAfter?: boolean): void
 };
-
-type RiotHookComponent = (
-    'onBeforeMount' |
-    'onMounted' |
-    'onBeforeUpdate' |
-    'onUpdated' |
-    'onBeforeUnmount' |
-    'onUnmounted' |
-    'onAsyncRendering'
-);
 
 
 /**
@@ -27,7 +32,7 @@ type RiotHookComponent = (
  * @param {RiotHookComponent} hook
  * @returns {MakeHook}
  */
-export const mkHook = (hook: RiotHookComponent): MakeHook => (
+export const mkHook = <P = any, S = any>(hook: HookKeys): MakeHook => (
 
     <T>(component: T, fn: Function, runAfter = false) => {
 
@@ -38,13 +43,13 @@ export const mkHook = (hook: RiotHookComponent): MakeHook => (
             throw TypeError('hook must be a function');
         }
 
-        component[hook] = function (...args) {
+        component[hook] = function (props: P, state: S) {
 
-            !runAfter && original?.call(this, ...args);
+            !runAfter && original?.call(this, props, state);
 
-            fn.call(this, ...args);
+            fn.call(this, props, state);
 
-            runAfter && original?.call(this, ...args);
+            runAfter && original?.call(this, props, state);
         };
     }
 );
@@ -56,10 +61,9 @@ export const makeOnUpdated = mkHook('onUpdated');
 export const makeOnBeforeUnmount = mkHook('onBeforeUnmount');
 export const makeOnUnmounted = mkHook('onUnmounted');
 
-export const mergeState = <T>(component: T & RiotComponent, state: object) => {
+export const mergeState = <P = any, S = any, T = any>(component: T & RiotComponent<P, S>, state: S & object) => {
 
     component.state = {
-
         ...(component.state || {}),
         ...state
     };
