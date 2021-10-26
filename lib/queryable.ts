@@ -56,8 +56,10 @@ export const makeQueryable = function <
 
     const implement = component as T & QueryableComponent<State>;
 
+    const state = implement.state;
+
     mergeState(implement, {
-        isFetching: false,
+        isFetching: state.isFetching || false,
         fetchError: null
     });
 

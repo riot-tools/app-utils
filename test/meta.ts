@@ -24,15 +24,15 @@ describe('Meta', function () {
         const original = sinon.stub();
         const override = sinon.stub();
 
-        const hook = mkHook('onAsyncRendering');
+        const hook = mkHook('onBeforeMount');
 
         const component = {
-            onAsyncRendering: original
+            onBeforeMount: original
         };
 
         hook(component, override);
 
-        component.onAsyncRendering();
+        component.onBeforeMount();
 
         expect(original.calledOnce).to.be.true;
         expect(override.calledOnce).to.be.true;
@@ -42,13 +42,13 @@ describe('Meta', function () {
 
         const override = sinon.stub();
 
-        const hook = mkHook('onAsyncRendering');
+        const hook = mkHook('onBeforeMount');
 
         const component: any = {};
 
         hook(component, override);
 
-        expect(() => component.onAsyncRendering()).not.to.throw();
+        expect(() => component.onBeforeMount()).not.to.throw();
         expect(override.calledOnce).to.be.true;
     });
 
@@ -58,26 +58,26 @@ describe('Meta', function () {
         const before = sinon.stub();
         const after = sinon.stub();
 
-        const hook = mkHook('onAsyncRendering');
+        const hook = mkHook('onBeforeMount');
 
         const component = {
-            onAsyncRendering: original
+            onBeforeMount: original
         };
 
 
         hook(component, before);
 
-        component.onAsyncRendering();
+        component.onBeforeMount();
         expect(before.calledOnce, 'runBefore - before').to.be.true;
         expect(after.calledOnce, 'runBefore - after').to.be.false;
 
         sinon.resetHistory();
 
-        component.onAsyncRendering = original;
+        component.onBeforeMount = original;
 
         hook(component, after, true);
 
-        component.onAsyncRendering();
+        component.onBeforeMount();
         expect(before.calledOnce, 'runAfter - before').to.be.false;
         expect(after.calledOnce, 'runAfter - after').to.be.true;
     });
