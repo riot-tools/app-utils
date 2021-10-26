@@ -8,42 +8,36 @@ export const $ = (selector: string, ctx?: Element): Element[] => {
 };
 
 
-type ManyElements = EventTarget | EventTarget[] | NodeListOf<Element>;
+type ManyElements<T extends Node = Element> = T | T[];
 
 const _itemsToArray = <T>(els: T | T[]): T[] => {
 
     if (!Array.isArray(els)) {
 
-        els = [els as T];
+        els = [els];
     }
 
     return els;
 };
 
-const _split = e => e.split(/\s/);
+type GlobalEvents = keyof DocumentEventMap;
+interface BiancoEventListener {
+    (ev: DocumentEventMap[keyof DocumentEventMap]): void;
+}
 
-type DomEvent = KeyboardEventInit & MouseEventInit & TouchEventInit;
-interface EventCallback {
-    (event: DomEvent): any;
+interface EachElementCb {
+    <EL extends Element>(el: EL): void
 }
 
 export class HtmlEvents {
 
-    private static _eachItem(events: string, callback: Function) {
+    private static _eachElement (els: ManyElements, callback: EachElementCb) {
 
-        _split(events).forEach(callback);
-    }
-
-    private static _eachElement(els: ManyElements, evs: string, callback: Function) {
-
-        const elements = _itemsToArray(els);
+        const elements = _itemsToArray<Element>(els);
 
         for (const element of elements) {
 
-            this._eachItem(evs, (event) => (
-
-                callback(element, event)
-            ));
+            callback(element)
         }
     }
 
@@ -57,15 +51,36 @@ export class HtmlEvents {
      * @example
      *
      * HtmlEvents.on(div, 'click', () => {});
-     * HtmlEvents.on(div, 'focus blur', () => {});
-     * HtmlEvents.on([div, input], 'focus blur', () => {});
+     * HtmlEvents.on(div, ['focus', 'blur'], () => {});
+     * HtmlEvents.on([div, input], ['focus', 'blur'], () => {});
      */
-    static on(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
+    static on (els: ManyElements, event: GlobalEvents | GlobalEvents[], callback: BiancoEventListener, opts?: EventListenerOptions) {
 
-        this._eachElement(els, events, (element, event) => {
+        this._eachElement(
+            els,
+            (element) => {
 
-            element.addEventListener(event, callback, opts || false);
-        });
+                if (Array.isArray(event)) {
+
+                    for (const ev of event) {
+
+                        element.addEventListener(
+                            ev,
+                            callback,
+                            opts || false
+                        );
+                    }
+                }
+                else {
+
+                    element.addEventListener(
+                        event,
+                        callback,
+                        opts || false
+                    );
+                }
+            }
+        );
     }
 
     /**
@@ -78,18 +93,43 @@ export class HtmlEvents {
      * @example
      *
      * HtmlEvents.one(div, 'click', () => {});
-     * HtmlEvents.one(div, 'focus blur', () => {});
-     * HtmlEvents.one([div, input], 'focus blur', () => {});
+     * HtmlEvents.one(div, ['focus', 'blur'], () => {});
+     * HtmlEvents.one([div, input], ['focus', 'blur'], () => {});
      */
-    static one(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
+    static one(els: ManyElements, event: GlobalEvents | GlobalEvents[], callback: EventListener, opts?: AddEventListenerOptions) {
 
-        this._eachElement(els, events, (element, event) => {
 
-            element.addEventListener(event, callback, {
-                ...(opts || {}),
-                once: true
-            })
-        });
+        this._eachElement(
+            els,
+            (element) => {
+
+                opts = {
+                    ...(opts || {}),
+                    once: true
+                };
+
+                if (Array.isArray(event)) {
+
+                    for (const ev of event) {
+
+                        element.addEventListener(
+                            ev,
+                            callback,
+                            opts
+                        );
+                    }
+                }
+                else {
+
+
+                    element.addEventListener(
+                        event,
+                        callback,
+                        opts
+                    );
+                }
+            }
+        );
     }
 
     /**
@@ -102,15 +142,38 @@ export class HtmlEvents {
      * @example
      *
      * HtmlEvents.off(div, 'click', callback);
-     * HtmlEvents.off(div, 'focus blur', callback);
-     * HtmlEvents.off([div, input], 'focus blur', callback);
+     * HtmlEvents.off(div, ['focus', 'blur'], callback);
+     * HtmlEvents.off([div, input], ['focus', 'blur'], callback);
      */
-    static off(els: ManyElements, events: string, callback: EventCallback, opts?: EventListenerOptions) {
+    static off(els: ManyElements, event: GlobalEvents | GlobalEvents[], callback: EventListener, opts?: EventListenerOptions) {
 
-        this._eachElement(els, events, (element, event) => {
+        this._eachElement(
+            els,
+            (element) => {
 
-            element.removeEventListener(event, callback, opts || false);
-        });
+
+                if (Array.isArray(event)) {
+
+                    for (const ev of event) {
+
+                        element.removeEventListener(
+                            ev,
+                            callback,
+                            opts || false
+                        );
+                    }
+                }
+                else {
+
+
+                    element.removeEventListener(
+                        event,
+                        callback,
+                        opts || false
+                    );
+                }
+            }
+        );
     }
 
     /**
@@ -119,7 +182,7 @@ export class HtmlEvents {
      * @param event a single event
      * @param data Optional data to pass via `event.detail`
      */
-    static trigger(els: ManyElements, event: string | Event, data?: any) {
+    static trigger(els: ManyElements, event: GlobalEvents | Event, data?: any) {
 
         const elements = _itemsToArray(els) as HTMLElement[];
 

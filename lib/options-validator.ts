@@ -1,29 +1,29 @@
 class OptionsValidatorError extends Error {}
 
-type OptionsValidatorSchemaValueRequired = [
-    Boolean,
-    OptionsValidatorSchemaValue|OptionsValidatorSchema
+type PropType<TObj, TProp extends keyof TObj> = TObj[TProp];
+
+type OptionsValidatorSchemaValueRequired<V> = [
+    boolean,
+    OptionsValidatorSchemaValue<V> | OptionsValidatorSchema<V>
 ]
 
-export interface CustomValidatorFunction {
-    (...args: any[]): boolean|string
+export interface CustomValidatorFunction<V> {
+    (val: PropType<V, keyof V>): boolean | string
 }
 
-type OptionsValidatorSchemaValue = (
+type OptionsValidatorSchemaValue<V> = (
     boolean |
     string |
-    CustomValidatorFunction |
-    OptionsValidatorSchemaValueRequired
+    CustomValidatorFunction<V> |
+    OptionsValidatorSchemaValueRequired<V>
 );
 
-type OptionsValidatorSchema = {
-    [key: string]: (
-        OptionsValidatorSchemaValue |
-        OptionsValidatorSchema
-    )
-};
+type OptionsValidatorSchema<V> = Record<
+    keyof V,
+    OptionsValidatorSchemaValue<V>
+>;
 
-export class OptionsValidator {
+export class OptionsValidator<V> {
 
     validators = new Map();
     requiredKeys: Set<string> = new Set();
@@ -64,17 +64,17 @@ export class OptionsValidator {
      * validator.validate(myOptionsObject);
      * ```
      */
-    constructor(schema: OptionsValidatorSchema, name?: string) {
+    constructor(schema: OptionsValidatorSchema<V>, name?: string) {
 
         if (name) {
             this.name = name;
         }
 
-        const entries = Object.entries(schema);
+        const entries = Object.entries<OptionsValidatorSchemaValue<V>>(schema);
 
-        for (const entry of entries) {
+        for (const [key, type] of entries) {
 
-            this._makeValidator(...entry);
+            this._makeValidator(key, type);
         }
     }
 
@@ -93,7 +93,11 @@ export class OptionsValidator {
 
     _assertType(key: string, type: any, value: any) {
 
-        if (value.constructor.name !== type) {
+        if (
+            value === undefined ||
+            value === null ||
+            value.constructor.name !== type
+        ) {
 
             this._throw(
                 key,
@@ -132,7 +136,7 @@ export class OptionsValidator {
         );
     }
 
-    _setRequired(key: string, opts: OptionsValidatorSchemaValueRequired) {
+    _setRequired(key: string, opts: OptionsValidatorSchemaValueRequired<V>) {
 
         const [required, type] = opts;
 
@@ -153,7 +157,7 @@ export class OptionsValidator {
             if (type.constructor === Object) {
 
                 return {
-                    validator: new OptionsValidator(type as OptionsValidatorSchema),
+                    validator: new OptionsValidator(type as OptionsValidatorSchema<V>),
                     value
                 };
             }
@@ -172,7 +176,7 @@ export class OptionsValidator {
 
     _makeValidator(
         key: string,
-        type: OptionsValidatorSchemaValue|OptionsValidatorSchema
+        type: OptionsValidatorSchemaValue<V> | OptionsValidatorSchema<V>
     ) {
 
         // Validate schema config is valid
@@ -212,7 +216,7 @@ export class OptionsValidator {
         // Create nested schemas
         if (type.constructor === Object) {
 
-            this.validators.set(key, new OptionsValidator(type as OptionsValidatorSchema));
+            this.validators.set(key, new OptionsValidator(type as OptionsValidatorSchema<V>));
             return;
         }
 

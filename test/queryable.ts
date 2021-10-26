@@ -1,13 +1,24 @@
 import { expect } from 'chai';
+import { Test } from 'mocha';
 import { RiotComponent } from 'riot';
 
 import sinon, { SinonStub } from 'sinon';
 
-import { makeQueryable } from '../lib';
+import { makeQueryable, QueryableComponent } from '../lib';
 
-const component: any = {
+type TestState = {
+    something: string
+}
+
+const component: (
+    Partial<QueryableComponent<TestState>> &
+    Partial<RiotComponent<{}, TestState>> & {
+
+        someFunction?: Function
+    }
+ ) = {
     state: { something: 'intheway' },
-    update: sinon.stub() as RiotComponent['update']
+    update: sinon.stub()
 };
 
 describe('Make Queryable', function () {
@@ -39,6 +50,7 @@ describe('Make Queryable', function () {
         sinon.assert.calledOnce(fake);
 
         const update = component.update as SinonStub;
+        console.log(update.getCalls());
 
         sinon.assert.calledWithExactly(
             update,
@@ -79,6 +91,8 @@ describe('Make Queryable', function () {
         await component.someFunction('a', 'b', 'c');
 
         const update = component.update as SinonStub;
+
+
 
         sinon.assert.calledWithExactly(
             update,
