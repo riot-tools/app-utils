@@ -37,7 +37,7 @@ describe('Options Validator', function () {
 
             expect(() => (
 
-                new OptionsValidator(schema)
+                new OptionsValidator(schema as any)
             )).to.throw();
         }
 
@@ -168,7 +168,7 @@ describe('Options Validator', function () {
 
     it('enforces nested schemas', () => {
 
-        const validator = new OptionsValidator({
+        const validator = new OptionsValidator <any>({
             poo: [
                 true,
                 {

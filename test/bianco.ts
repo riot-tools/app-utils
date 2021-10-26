@@ -227,6 +227,7 @@ describe('HtmlEvents', () => {
 
         HtmlEvents.on(div, 'click', listener);
 
+
         const addEventListener = div.addEventListener as sinon.SinonSpy;
 
         expect(addEventListener.calledOnce).to.be.true;
@@ -263,7 +264,7 @@ describe('HtmlEvents', () => {
 
         sinon.spy(div);
 
-        HtmlEvents.on(div, 'click mousedown blur', listener);
+        HtmlEvents.on(div, ['click', 'mousedown', 'blur'], listener);
 
         const addEventListener = div.addEventListener as sinon.SinonSpy;
 
@@ -282,7 +283,7 @@ describe('HtmlEvents', () => {
         sinon.spy(div);
         sinon.spy(span);
 
-        HtmlEvents.on([div, span], 'click mousedown blur', listener);
+        HtmlEvents.on([div, span], ['click', 'mousedown', 'blur'], listener);
 
         const addEvents = [
             div.addEventListener as sinon.SinonSpy,
@@ -323,8 +324,8 @@ describe('HtmlEvents', () => {
         sinon.spy(div);
         sinon.spy(span);
 
-        HtmlEvents.on([div, span], 'click mousedown blur', listener);
-        HtmlEvents.off([div, span], 'click mousedown blur', listener);
+        HtmlEvents.on([div, span], ['click', 'mousedown', 'blur'], listener);
+        HtmlEvents.off([div, span], ['click', 'mousedown', 'blur'], listener);
 
         const addEvents = [
             div.removeEventListener as sinon.SinonSpy,
@@ -383,7 +384,7 @@ describe('HtmlEvents', () => {
         const span = document.createElement('span');
         const listener = sinon.fake();
 
-        HtmlEvents.one([div, span], 'click blur focus', listener);
+        HtmlEvents.one([div, span], ['click', 'blur', 'focus'], listener);
         HtmlEvents.trigger([div, span], 'click');
         HtmlEvents.trigger([div, span], 'click');
         HtmlEvents.trigger([div, span], 'blur');

@@ -13,8 +13,8 @@ const define = Object.defineProperties
 type CallbacksSet = Set<Function>;
 type EventCallbacksMap = Map<string, CallbacksSet>
 
-export interface ListenFn {
-    (event: string, fn: Function): void
+export interface ListenFn<RT = void> {
+    (event: string, fn: Function): RT
 }
 
 export interface EmitterFn {
@@ -26,13 +26,13 @@ type Cleanup = {
 }
 
 export type ObservedComponent = {
-    on: ListenFn & Cleanup,
+    on: ListenFn<Cleanup>,
     one: ListenFn,
     off: ListenFn,
     trigger: EmitterFn
 };
 
-export type ObservableInstanceChild = ObservedComponent & Cleanup
+export type ObservableInstanceChild<T> = T & ObservedComponent & Cleanup
 
 export type ObservableInstance<T> = ObservedComponent & {
     observe: Observable<T>['observe'],
@@ -180,7 +180,7 @@ export class Observable<T> {
      *
      * modal.cleanup(); // clears all event listeners
      */
-    observe<C>(component: C, prefix?: string): C & ObservableInstanceChild {
+    observe<C>(component: C, prefix?: string) {
 
         const self = this;
 
@@ -268,7 +268,7 @@ export class Observable<T> {
             )
         });
 
-        return component as C & ObservableInstanceChild;
+        return component as ObservableInstanceChild<C>;
     }
 
     /**
@@ -276,14 +276,16 @@ export class Observable<T> {
      * @param component Riot component
      * @returns component with an obserable interface
      */
-    install<C>(component: C): C & ObservableInstanceChild {
+    install<C>(component: C) {
 
-        makeOnBeforeUnmount(component, () => {
+        const observed = this.observe(component);
 
-            (component as any).cleanup();
+        makeOnBeforeUnmount(observed, () => {
+
+            observed.cleanup();
         });
 
-        return this.observe(component);
+        return observed;
     }
 
     /**

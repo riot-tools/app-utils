@@ -29,12 +29,12 @@ interface MakeHook {
 
 /**
  * Closure to implement stackable hooks
- * @param {RiotHookComponent} hook
+ * @param {RiotHookFn} hook
  * @returns {MakeHook}
  */
 export const mkHook = <P = any, S = any>(hook: HookKeys): MakeHook => (
 
-    <T>(component: T, fn: Function, runAfter = false) => {
+    (component, fn, runAfter = false) => {
 
         const original = component[hook];
 
@@ -61,7 +61,7 @@ export const makeOnUpdated = mkHook('onUpdated');
 export const makeOnBeforeUnmount = mkHook('onBeforeUnmount');
 export const makeOnUnmounted = mkHook('onUnmounted');
 
-export const mergeState = <P = any, S = any, T = any>(component: T & RiotComponent<P, S>, state: S & object) => {
+export const mergeState = <Component extends Partial<RiotComponent>, State extends object = {}>(component: Component, state: State) => {
 
     component.state = {
         ...(component.state || {}),
