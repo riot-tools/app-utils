@@ -1,3 +1,22 @@
+# [2.0.0](https://github.com/riot-tools/sak/compare/v1.4.3...v2.0.0) (2021-10-26)
+
+
+### Bug Fixes
+
+* 🐛 generic typings ([74f8090](https://github.com/riot-tools/sak/commit/74f80905b48fa614584efe40a9000c9a3f478440))
+
+
+### Features
+
+* 🎸 improve generics, queryable ([2efcc88](https://github.com/riot-tools/sak/commit/2efcc88cd23cdfc8adfb540fa9b2540277aa0305))
+* 🎸 initialize queryable ([f256226](https://github.com/riot-tools/sak/commit/f2562265c079cd62691cf0e03bca82b59d53ad36))
+
+
+### BREAKING CHANGES
+
+* 🧨 HtmlEvents no long supports space-separated list of events; use a single
+string or array of valid DOM events instead.
+
 # [2.0.0-next.1](https://github.com/riot-tools/sak/compare/v1.4.3...v2.0.0-next.1) (2021-10-26)
 
 
