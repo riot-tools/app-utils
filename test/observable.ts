@@ -3,6 +3,24 @@ import sinon from 'sinon';
 
 import { Observable } from '../lib';
 
+declare module '../lib' {
+
+    interface ObservableEvents {
+        test: string | number
+        test1: string
+        test2: string
+        test3: string
+        pooop: string
+
+        'child-test': string
+    }
+
+    interface ObservableEventPrefix {
+        child: unknown
+    }
+}
+
+
 const stub: {
     observer?: Observable<any>,
     component?: any,
@@ -19,10 +37,10 @@ interface RunTestOnBoth {
 
 const doToBoth = (fn: RunTestOnBoth) => {
 
-    fn(stub.observer, 'observer');
+    fn(stub.observer!, 'observer');
     fn(stub.component, 'component');
 
-    stub.observer.off('*');
+    stub.observer!.off('*');
     stub.component.off('*');
 };
 
@@ -388,21 +406,21 @@ describe('Observable - observe', () => {
 
         const child: any = {};
 
-        parent.observe(child, 'child');
+        parent!.observe(child, 'child');
 
         const parentFake = sinon.stub();
         const childFake = sinon.stub();
 
-        parent.on('test1', parentFake);
-        parent.on('test2', parentFake);
+        parent!.on('test1', parentFake);
+        parent!.on('test2', parentFake);
         child.on('test1', childFake);
         child.on('test2', childFake);
 
-        const beforeOff = [...parent.$_callbacks.keys()];
+        const beforeOff = [...parent!.$_callbacks.keys()];
 
         child.off('*');
 
-        const afterOff = [...parent.$_callbacks.keys()];
+        const afterOff = [...parent!.$_callbacks.keys()];
 
         expect(beforeOff).to.include.members([
             'child-test1', 'child-test2'
@@ -424,21 +442,21 @@ describe('Observable - observe', () => {
 
         const child: any = {};
 
-        parent.observe(child, 'child');
+        parent!.observe(child, 'child');
 
         const parentFake = sinon.stub();
         const childFake = sinon.stub();
 
-        parent.on('test1', parentFake);
-        parent.on('test2', parentFake);
+        parent!.on('test1', parentFake);
+        parent!.on('test2', parentFake);
         child.on('test1', childFake);
         child.on('test2', childFake);
 
-        const beforeOff = [...parent.$_callbacks.keys()];
+        const beforeOff = [...parent!.$_callbacks.keys()];
 
         child.cleanup();
 
-        const afterOff = [...parent.$_callbacks.keys()];
+        const afterOff = [...parent!.$_callbacks.keys()];
 
         expect(beforeOff).to.include.members([
             'child-test1', 'child-test2'
@@ -462,7 +480,7 @@ describe('Observable - observe', () => {
             onBeforeUnmount: fake
         };
 
-        stub.observer.install(component);
+        stub.observer!.install(component);
 
         expect(typeof component.on).to.eq('function');
         expect(typeof component.one).to.eq('function');

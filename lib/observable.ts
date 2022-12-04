@@ -7,40 +7,64 @@
 import { makeOnBeforeUnmount } from "./meta";
 import OptionsValidator from "./options-validator";
 
+/**
+ * Overrideable interface
+ */
+export interface ObservableEvents {
+    '*': any
+}
+
+/**
+ * Extendible event prefixes
+ */
+export interface ObservableEventPrefix { }
+type PrefixNames = keyof ObservableEventPrefix;
+
+type EventNames<T> = keyof T;
+
+// type EventNames = EventNames | `${PrefixNames}-${EventNames}`;
+type EventType<T, E extends EventNames<T>> = T[E]
+
+interface EventCallback<T, E extends EventNames<T>> {
+    (data: EventType<T, E>): void
+}
+
+
 const ALL_CALLBACKS = '*'
 const define = Object.defineProperties
 
 type CallbacksSet = Set<Function>;
 type EventCallbacksMap = Map<string, CallbacksSet>
 
-export interface ListenFn<RT = void> {
-    (event: string, fn: Function): RT
+export interface ListenFn<T, RT = void> {
+    <E extends EventNames<T>>(event: E, fn: EventCallback<T, E>): RT
 }
 
-export interface EmitterFn {
-    (event: string, ...args: any[]): void
+export interface EmitterFn<T> {
+    <E extends EventNames<T>>(event: E, ...args: EventType<T, E>[]): void
 }
 
 type Cleanup = {
     cleanup: () => void
 }
 
-export type ObservedComponent = {
-    on: ListenFn<Cleanup>,
-    one: ListenFn,
-    off: ListenFn,
-    trigger: EmitterFn
+export type ObservedComponent<T = ObservableEvents> = {
+    on: ListenFn<T, Cleanup>,
+    one: ListenFn<T>,
+    once: ListenFn<T>,
+    off: ListenFn<T>,
+    trigger: EmitterFn<T>,
+    emit: EmitterFn<T>,
 };
 
-export type ObservableInstanceChild<T> = T & ObservedComponent & Cleanup
+export type ObservableInstanceChild<T, U = ObservableEvents> = T & ObservedComponent<U> & Cleanup
 
-export type ObservableInstance<T> = ObservedComponent & {
-    observe: Observable<T>['observe'],
-    $_spy?: ObserverSpy<T>;
+export type ObservableInstance<T, U = ObservableEvents> = ObservedComponent<U> & {
+    observe: Observable<T, U>['observe'],
+    $_spy?: ObserverSpy<T, U>;
     $_ref?: String;
-    $_observer: Observable<T>
+    $_observer: Observable<T, U>
 }
-
 
 /**
  * Defines an object's properties and makes them non-enumerable
@@ -58,29 +82,29 @@ const defineOpts = <T>(value: T, configurable = false) => ({
 
 type ObservableFunctionName = 'on' | 'one' | 'off' | 'trigger';
 
-type OberverSpyOptions = {
-    event: string,
+type OberverSpyOptions<T> = {
+    event: keyof T,
     listener?: Function,
     args?: any[],
 };
 
-type ObserverSpyEvent<T> = OberverSpyOptions & {
+type ObserverSpyEvent<T, U> = OberverSpyOptions<U> & {
     fn: ObservableFunctionName,
-    context: Observable<T>
+    context: Observable<T, U>
 }
 
-interface ObserverSpy<T> {
-    (event: ObserverSpyEvent<T>): void
+interface ObserverSpy<T, U> {
+    (event: ObserverSpyEvent<T, U>): void
 }
 
-const sendToSpy = (
+const sendToSpy = <U>(
     fn: string,
     context: any,
     {
         event,
         listener = null,
         args = null
-    }: OberverSpyOptions
+    }: OberverSpyOptions<U>
 ) => {
 
     if (context.$_spy) {
@@ -95,9 +119,9 @@ const sendToSpy = (
     }
 }
 
-type ObservableOptions<T> = {
+type ObservableOptions<T, U> = {
     ref?: string,
-    spy?: ObserverSpy<T>
+    spy?: ObserverSpy<T, U>
 };
 
 const validator = new OptionsValidator({
@@ -105,14 +129,24 @@ const validator = new OptionsValidator({
     spy: 'Function'
 });
 
-export class Observable<T> {
+export class Observable<T, U = ObservableEvents> {
 
     $_callbacks: EventCallbacksMap = new Map();
     $_target: any = null;
-    $_spy?: ObserverSpy<T>;
+    $_spy?: ObserverSpy<T, U>;
     $_ref?: String;
 
-    constructor(target?: T, options?: ObservableOptions<T>) {
+    /**
+     * Same as `observable.one`
+     */
+    once: Observable<T, U>['one'];
+
+    /**
+     * Same as `observable.trigger`
+     */
+    emit: Observable<T, U>['trigger'];
+
+    constructor(target?: T, options?: ObservableOptions<T, U>) {
 
         const self = this;
         this.$_target = target || this;
@@ -121,8 +155,10 @@ export class Observable<T> {
         define(this, {
             on: defineOpts(this.on),
             one: defineOpts(this.one),
+            once: defineOpts(this.one),
             off: defineOpts(this.off),
             trigger: defineOpts(this.trigger),
+            emit: defineOpts(this.trigger),
             observe: defineOpts(this.observe),
             $_callbacks: defineOpts(this.$_callbacks),
             $_target: defineOpts(this.$_target),
@@ -144,11 +180,11 @@ export class Observable<T> {
         if (target) {
 
             define(target, {
-                on: defineOpts((ev: string, fn: Function) => self.on(ev, fn)),
-                one: defineOpts((ev: string, fn: Function) => self.one(ev, fn)),
-                off: defineOpts((ev: string, fn: Function) => self.off(ev, fn)),
-                trigger: defineOpts((ev: string, ...args: any[]) => self.trigger(ev, ...args)),
-                observe: defineOpts((component: any, prefix?: string) => self.observe(component, prefix)),
+                on: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.on(ev, fn)),
+                one: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.one(ev, fn)),
+                off: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.off(ev, fn)),
+                trigger: defineOpts(<E extends EventNames<U>>(ev: E, ...args: EventType<U, E>[]) => self.trigger(ev, ...args)),
+                observe: defineOpts((component: any, prefix?: PrefixNames) => self.observe(component, prefix)),
                 $_observer: defineOpts(self)
             });
         }
@@ -180,14 +216,15 @@ export class Observable<T> {
      *
      * modal.cleanup(); // clears all event listeners
      */
-    observe<C>(component: C, prefix?: string) {
+    observe<C>(component: C, prefix?: PrefixNames) {
 
         const self = this;
 
-        let namedEvent = (ev: string) => {
+        interface PrefixCallback {
+            <E extends EventNames<U>>(event: E): EventNames<U>
+        }
 
-            return `${prefix}-${ev}`;
-        };
+        let namedEvent: PrefixCallback = (ev) => `${prefix}-${ev as string}` as any;
 
         if (!prefix) {
 
@@ -208,7 +245,7 @@ export class Observable<T> {
         define(component, {
 
             on: defineOpts(
-                (ev: string, fn: Function) => {
+                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
 
                     return self.on(
                         namedEvent(ev),
@@ -218,7 +255,7 @@ export class Observable<T> {
             ),
 
             one: defineOpts(
-                (ev: string, fn: Function) => {
+                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
 
                     return self.one(
                         namedEvent(ev),
@@ -228,7 +265,7 @@ export class Observable<T> {
             ),
 
             off: defineOpts(
-                (ev: string, fn?: Function) => {
+                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
 
                     const tracked = [...listenerTracker.values()];
 
@@ -237,7 +274,7 @@ export class Observable<T> {
 
                         for (const entry of tracked) {
 
-                            const [ev, listener] = entry;
+                            const [ev, listener] = entry as [EventNames<U>, EventCallback<U, any>];
                             listenerTracker.delete(entry);
                             self.off(namedEvent(ev), listener);
                         }
@@ -254,7 +291,7 @@ export class Observable<T> {
             ),
 
             trigger: defineOpts(
-                (ev: string, ...args: any[]) => {
+                <E extends EventNames<U>>(ev: E, ...args: EventType<U, E>[]) => {
 
                     return self.trigger(namedEvent(ev), ...args);
                 }
@@ -268,7 +305,14 @@ export class Observable<T> {
             )
         });
 
-        return component as ObservableInstanceChild<C>;
+        const observed = component as ObservableInstanceChild<C>;
+
+        define(observed, {
+            once: defineOpts(observed.one),
+            emit: defineOpts(observed.trigger),
+        });
+
+        return observed;
     }
 
     /**
@@ -294,14 +338,14 @@ export class Observable<T> {
      * @param listener
      * @returns {Cleanup}
      */
-    on(event: string, listener: Function): Cleanup {
+    on<E extends EventNames<U>>(event: E, listener: EventCallback<U, E>): Cleanup {
 
         if (this.$_spy) {
 
-            sendToSpy('on', this, { event, listener });
+            sendToSpy <U>('on', this, { event, listener });
         }
 
-        const stored = this.$_callbacks.get(event);
+        const stored = this.$_callbacks.get(event as string);
 
         if (stored && !stored.has(listener)) {
             stored.add(listener);
@@ -309,7 +353,7 @@ export class Observable<T> {
 
         if (!stored) {
 
-            this.$_callbacks.set(event, new Set([listener]));
+            this.$_callbacks.set(event as string, new Set([listener]));
         }
 
         return {
@@ -322,11 +366,11 @@ export class Observable<T> {
      * @param event
      * @param listener
      */
-    one(event: string, listener: Function) {
+    one<E extends EventNames<U>>(event: E, listener: EventCallback<U, E>) {
 
         if (this.$_spy) {
 
-            sendToSpy('one', this, { event, listener });
+            sendToSpy <U>('one', this, { event, listener });
         }
 
         const self = this;
@@ -345,11 +389,11 @@ export class Observable<T> {
      * @param event
      * @param listener
      */
-    off(event: string, listener?: Function) {
+    off<E extends EventNames<U>>(event: E, listener?: EventCallback<U, E>) {
 
         if (this.$_spy) {
 
-            sendToSpy('off', this, { event, listener });
+            sendToSpy <U>('off', this, { event, listener });
         }
 
         if (event === ALL_CALLBACKS && !listener) {
@@ -360,18 +404,18 @@ export class Observable<T> {
 
         if (listener) {
 
-            const fns = this.$_callbacks.get(event);
+            const fns = this.$_callbacks.get(event as string);
 
             if (fns) {
 
                 fns.delete(listener);
-                if (fns.size === 0) this.$_callbacks.delete(event);
+                if (fns.size === 0) this.$_callbacks.delete(event as string);
             }
 
             return;
         }
 
-        this.$_callbacks.delete(event);
+        this.$_callbacks.delete(event as string);
     }
 
     /**
@@ -379,19 +423,23 @@ export class Observable<T> {
      * @param event
      * @param args
      */
-    trigger(event: string, ...args: any[]) {
+    trigger<E extends EventNames<U>>(event: E, ...args: EventType<U, E>[]) {
 
         if (this.$_spy) {
 
-            sendToSpy('trigger', this, { event, args });
+            sendToSpy <U>('trigger', this, { event, args });
         }
 
-        const fns = this.$_callbacks.get(event)
+        const fns = this.$_callbacks.get(event as string)
 
         if (fns) fns.forEach(fn => fn.apply(this, args))
 
         if (this.$_callbacks.get(ALL_CALLBACKS) && event !== ALL_CALLBACKS) {
-            this.trigger(ALL_CALLBACKS, event, ...args)
+            this.trigger(
+                ALL_CALLBACKS as EventNames<U>,
+                event as any,
+                ...args
+            )
         }
     }
 }
