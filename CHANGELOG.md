@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/riot-tools/sak/compare/v2.1.0...v2.1.1) (2022-12-07)
+
+
+### Bug Fixes
+
+* 🐛 independent modules ([51ecae7](https://github.com/riot-tools/sak/commit/51ecae7b44055c1aa16e543556f3e4699d6fb3bd))
+
 # [2.1.0](https://github.com/riot-tools/sak/compare/v2.0.0...v2.1.0) (2022-12-04)
 
 
