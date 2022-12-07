@@ -1,12 +1,13 @@
 [@riot-tools/sak](../README.md) / [Exports](../modules.md) / Observable
 
-# Class: Observable<T\>
+# Class: Observable<T, U\>
 
 ## Type parameters
 
-| Name |
-| :------ |
-| `T` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `T` |
+| `U` | [`ObservableEvents`](../interfaces/ObservableEvents.md) |
 
 ## Table of contents
 
@@ -20,6 +21,8 @@
 - [$\_ref](Observable.md#$_ref)
 - [$\_spy](Observable.md#$_spy)
 - [$\_target](Observable.md#$_target)
+- [emit](Observable.md#emit)
+- [once](Observable.md#once)
 
 ### Methods
 
@@ -34,24 +37,25 @@
 
 ### constructor
 
-• **new Observable**<`T`\>(`target?`, `options?`)
+• **new Observable**<`T`, `U`\>(`target?`, `options?`)
 
 #### Type parameters
 
-| Name |
-| :------ |
-| `T` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `T` |
+| `U` | [`ObservableEvents`](../interfaces/ObservableEvents.md) |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `target?` | `T` |
-| `options?` | `ObservableOptions` |
+| `options?` | `ObservableOptions`<`T`, `U`\> |
 
 #### Defined in
 
-[observable.ts:121](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L121)
+[observable.ts:149](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L149)
 
 ## Properties
 
@@ -61,7 +65,7 @@
 
 #### Defined in
 
-[observable.ts:116](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L116)
+[observable.ts:134](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L134)
 
 ___
 
@@ -71,17 +75,17 @@ ___
 
 #### Defined in
 
-[observable.ts:119](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L119)
+[observable.ts:137](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L137)
 
 ___
 
 ### $\_spy
 
-• `Optional` **$\_spy**: `ObserverSpy`
+• `Optional` **$\_spy**: `ObserverSpy`<`T`, `U`\>
 
 #### Defined in
 
-[observable.ts:118](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L118)
+[observable.ts:136](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L136)
 
 ___
 
@@ -91,13 +95,79 @@ ___
 
 #### Defined in
 
-[observable.ts:117](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L117)
+[observable.ts:135](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L135)
+
+___
+
+### emit
+
+• **emit**: <E\>(`event`: `E`, ...`args`: `EventType`<`U`, `E`\>[]) => `void`
+
+#### Type declaration
+
+▸ <`E`\>(`event`, `...args`): `void`
+
+Emits an event
+
+##### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `event` | `E` |
+| `...args` | `EventType`<`U`, `E`\>[] |
+
+##### Returns
+
+`void`
+
+#### Defined in
+
+[observable.ts:147](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L147)
+
+___
+
+### once
+
+• **once**: <E\>(`event`: `E`, `listener`: `EventCallback`<`U`, `E`\>) => `Cleanup`
+
+#### Type declaration
+
+▸ <`E`\>(`event`, `listener`): `Cleanup`
+
+Listen for an event once
+
+##### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `event` | `E` |
+| `listener` | `EventCallback`<`U`, `E`\> |
+
+##### Returns
+
+`Cleanup`
+
+#### Defined in
+
+[observable.ts:142](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L142)
 
 ## Methods
 
 ### install
 
-▸ **install**<`C`\>(`component`): `C` & [`ObservedComponent`](../modules.md#observedcomponent) & `Cleanup`
+▸ **install**<`C`\>(`component`): [`ObservableInstanceChild`](../modules.md#observableinstancechild)<`C`, [`ObservableEvents`](../interfaces/ObservableEvents.md)\>
 
 Riot install this event emitter onto given riot component. To be used with `riot.install`, or independently on an as-needed basis.
 
@@ -115,26 +185,27 @@ Riot install this event emitter onto given riot component. To be used with `riot
 
 #### Returns
 
-`C` & [`ObservedComponent`](../modules.md#observedcomponent) & `Cleanup`
+[`ObservableInstanceChild`](../modules.md#observableinstancechild)<`C`, [`ObservableEvents`](../interfaces/ObservableEvents.md)\>
 
 component with an obserable interface
 
 #### Defined in
 
-[observable.ts:285](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L285)
+[observable.ts:323](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L323)
 
 ___
 
 ### observe
 
-▸ **observe**<`C`\>(`component`, `prefix?`): `C` & [`ObservedComponent`](../modules.md#observedcomponent) & `Cleanup`
+▸ **observe**<`C`\>(`component`, `prefix?`): [`ObservableInstanceChild`](../modules.md#observableinstancechild)<`C`, [`ObservableEvents`](../interfaces/ObservableEvents.md)\>
 
 Observes given component as an extension of this observable instance.
 Optionally prefix for dispatching within it's own context, while still
 being able to be triggered by the original instance's events.
 
-**`example`**
+**`Example`**
 
+```ts
 const obs = new Observable();
 
 const modal = {};
@@ -147,6 +218,7 @@ obs.trigger('modal-open'); // opens modal
 modal.trigger('open'); // calls the same event
 
 modal.cleanup(); // clears all event listeners
+```
 
 #### Type parameters
 
@@ -159,30 +231,36 @@ modal.cleanup(); // clears all event listeners
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `component` | `C` | Component to wrap events around |
-| `prefix?` | `string` | Prefix this component will dispatch and listen to |
+| `prefix?` | `never` | Prefix this component will dispatch and listen to |
 
 #### Returns
 
-`C` & [`ObservedComponent`](../modules.md#observedcomponent) & `Cleanup`
+[`ObservableInstanceChild`](../modules.md#observableinstancechild)<`C`, [`ObservableEvents`](../interfaces/ObservableEvents.md)\>
 
 #### Defined in
 
-[observable.ts:189](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L189)
+[observable.ts:219](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L219)
 
 ___
 
 ### off
 
-▸ **off**(`event`, `listener?`): `void`
+▸ **off**<`E`\>(`event`, `listener?`): `void`
 
 Stop listening for an event
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `listener?` | `Function` |
+| `event` | `E` |
+| `listener?` | `EventCallback`<`U`, `E`\> |
 
 #### Returns
 
@@ -190,22 +268,28 @@ Stop listening for an event
 
 #### Defined in
 
-[observable.ts:352](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L352)
+[observable.ts:392](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L392)
 
 ___
 
 ### on
 
-▸ **on**(`event`, `listener`): `Cleanup`
+▸ **on**<`E`\>(`event`, `listener`): `Cleanup`
 
 Listen for an event
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `listener` | `Function` |
+| `event` | `E` |
+| `listener` | `EventCallback`<`U`, `E`\> |
 
 #### Returns
 
@@ -213,22 +297,28 @@ Listen for an event
 
 #### Defined in
 
-[observable.ts:301](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L301)
+[observable.ts:341](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L341)
 
 ___
 
 ### one
 
-▸ **one**(`event`, `listener`): `Cleanup`
+▸ **one**<`E`\>(`event`, `listener`): `Cleanup`
 
 Listen for an event once
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `listener` | `Function` |
+| `event` | `E` |
+| `listener` | `EventCallback`<`U`, `E`\> |
 
 #### Returns
 
@@ -236,22 +326,28 @@ Listen for an event once
 
 #### Defined in
 
-[observable.ts:329](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L329)
+[observable.ts:369](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L369)
 
 ___
 
 ### trigger
 
-▸ **trigger**(`event`, ...`args`): `void`
+▸ **trigger**<`E`\>(`event`, `...args`): `void`
 
 Emits an event
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `...args` | `any`[] |
+| `event` | `E` |
+| `...args` | `EventType`<`U`, `E`\>[] |
 
 #### Returns
 
@@ -259,4 +355,4 @@ Emits an event
 
 #### Defined in
 
-[observable.ts:386](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L386)
+[observable.ts:426](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L426)

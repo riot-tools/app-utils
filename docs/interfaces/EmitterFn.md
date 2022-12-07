@@ -1,19 +1,31 @@
 [@riot-tools/sak](../README.md) / [Exports](../modules.md) / EmitterFn
 
-# Interface: EmitterFn
+# Interface: EmitterFn<T\>
+
+## Type parameters
+
+| Name |
+| :------ |
+| `T` |
 
 ## Callable
 
 ### EmitterFn
 
-▸ **EmitterFn**(`event`, ...`args`): `void`
+▸ **EmitterFn**<`E`\>(`event`, `...args`): `void`
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `...args` | `any`[] |
+| `event` | `E` |
+| `...args` | `EventType`<`T`, `E`\>[] |
 
 #### Returns
 
@@ -21,4 +33,4 @@
 
 #### Defined in
 
-[observable.ts:21](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L21)
+[observable.ts:44](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L44)

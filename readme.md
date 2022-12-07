@@ -1,5 +1,3 @@
-@riot-tools/sak / [Exports](modules.md)
-
 # Riot Tools - SAK
 
 Swiss Army Knife of Riot Tools

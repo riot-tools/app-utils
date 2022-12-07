@@ -1,6 +1,12 @@
 [@riot-tools/sak](../README.md) / [Exports](../modules.md) / OptionsValidator
 
-# Class: OptionsValidator
+# Class: OptionsValidator<V\>
+
+## Type parameters
+
+| Name |
+| :------ |
+| `V` |
 
 ## Table of contents
 
@@ -29,14 +35,14 @@
 
 ### constructor
 
-• **new OptionsValidator**(`schema`, `name?`)
+• **new OptionsValidator**<`V`\>(`schema`, `name?`)
 
 Validates a function or classes's incoming options using
 a simple js type checker. Validates against constructors,
 primitives and custom functions. Schema is validated
 recursively, therefore nested validators is supported.
 
-**`example`**
+**`Example`**
 
 ```js
 const schema = {
@@ -61,16 +67,22 @@ const validator = new OptionsValidator(schema, 'my component');
 validator.validate(myOptionsObject);
 ```
 
+#### Type parameters
+
+| Name |
+| :------ |
+| `V` |
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `schema` | `OptionsValidatorSchema` | Schema shape that your options should accept |
+| `schema` | `OptionsValidatorSchema`<`V`\> | Schema shape that your options should accept |
 | `name?` | `string` | Name of implementation |
 
 #### Defined in
 
-[options-validator.ts:67](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L67)
+[options-validator.ts:67](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L67)
 
 ## Properties
 
@@ -80,7 +92,7 @@ validator.validate(myOptionsObject);
 
 #### Defined in
 
-[options-validator.ts:30](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L30)
+[options-validator.ts:30](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L30)
 
 ___
 
@@ -90,7 +102,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:29](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L29)
+[options-validator.ts:29](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L29)
 
 ___
 
@@ -100,7 +112,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:28](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L28)
+[options-validator.ts:28](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L28)
 
 ## Methods
 
@@ -122,7 +134,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:94](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L94)
+[options-validator.ts:94](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L94)
 
 ___
 
@@ -144,7 +156,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:106](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L106)
+[options-validator.ts:110](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L110)
 
 ___
 
@@ -157,7 +169,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `key` | `string` |
-| `type` | `OptionsValidatorSchema` \| `OptionsValidatorSchemaValue` |
+| `type` | `OptionsValidatorSchemaValue`<`V`\> \| `OptionsValidatorSchema`<`V`\> |
 
 #### Returns
 
@@ -165,13 +177,13 @@ ___
 
 #### Defined in
 
-[options-validator.ts:173](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L173)
+[options-validator.ts:177](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L177)
 
 ___
 
 ### \_msg
 
-▸ **_msg**(...`args`): `string`
+▸ **_msg**(`...args`): `string`
 
 #### Parameters
 
@@ -185,7 +197,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:81](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L81)
+[options-validator.ts:81](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L81)
 
 ___
 
@@ -206,7 +218,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:124](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L124)
+[options-validator.ts:128](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L128)
 
 ___
 
@@ -219,7 +231,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `key` | `string` |
-| `opts` | `OptionsValidatorSchemaValueRequired` |
+| `opts` | `OptionsValidatorSchemaValueRequired`<`V`\> |
 
 #### Returns
 
@@ -227,13 +239,13 @@ ___
 
 #### Defined in
 
-[options-validator.ts:135](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L135)
+[options-validator.ts:139](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L139)
 
 ___
 
 ### \_throw
 
-▸ **_throw**(...`args`): `void`
+▸ **_throw**(`...args`): `void`
 
 #### Parameters
 
@@ -247,7 +259,7 @@ ___
 
 #### Defined in
 
-[options-validator.ts:86](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L86)
+[options-validator.ts:86](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L86)
 
 ___
 
@@ -268,4 +280,4 @@ ___
 
 #### Defined in
 
-[options-validator.ts:231](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L231)
+[options-validator.ts:235](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L235)

@@ -5,14 +5,24 @@
   "main": "dist/umd.js",
   "module": "dist/es.js",
   "cdn": "dist/iife.js",
-  "typings": "dist/types/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "package.json",
+    "dist",
+    "docs",
+    "readme.md",
+    "CHANGELOG.md"
+  ],
   "author": "Danilo Alonso <danilo@alonso.network>",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "rollup -c",
+    "ts": "yarn tsc",
+    "build": "rollup -c && yarn ts;",
     "test": "mocha -r esm -r ./test/_setup.js -r ts-node/register 'test/**/*.ts'",
-    "tdd": "nodemon -e 'ts' -x 'yarn test'"
+    "tdd": "nodemon -e 'ts' -x 'yarn test'",
+    "docs": "typedoc --plugin typedoc-plugin-markdown --out docs lib/index.ts"
+
   },
   "repository": {
     "type": "git",
@@ -47,7 +57,7 @@
     "@semantic-release/git": "^9",
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
-    "@types/node": "^16",
+    "@types/node": "^18",
     "@types/sinon": "^10.0.2",
     "chai": "^4",
     "cz-conventional-changelog": "^3",
@@ -65,7 +75,9 @@
     "semantic-release": "^17",
     "sinon": "^11.1.2",
     "ts-node": "^10",
-    "typescript": "^4"
+    "typedoc": "^0.23.21",
+    "typedoc-plugin-markdown": "^3.14.0",
+    "typescript": "^4.8"
   },
   "commitlint": {
     "extends": [

@@ -1,18 +1,24 @@
 [@riot-tools/sak](../README.md) / [Exports](../modules.md) / CustomValidatorFunction
 
-# Interface: CustomValidatorFunction
+# Interface: CustomValidatorFunction<V\>
+
+## Type parameters
+
+| Name |
+| :------ |
+| `V` |
 
 ## Callable
 
 ### CustomValidatorFunction
 
-▸ **CustomValidatorFunction**(...`args`): `string` \| `boolean`
+▸ **CustomValidatorFunction**(`val`): `string` \| `boolean`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `...args` | `any`[] |
+| `val` | `PropType`<`V`, keyof `V`\> |
 
 #### Returns
 
@@ -20,4 +26,4 @@
 
 #### Defined in
 
-[options-validator.ts:9](https://github.com/riot-tools/sak/blob/8a50b76/lib/options-validator.ts#L9)
+[options-validator.ts:11](https://github.com/riot-tools/sak/blob/741d242/lib/options-validator.ts#L11)

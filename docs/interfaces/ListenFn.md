@@ -1,24 +1,37 @@
 [@riot-tools/sak](../README.md) / [Exports](../modules.md) / ListenFn
 
-# Interface: ListenFn
+# Interface: ListenFn<T, RT\>
+
+## Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `T` | `T` |
+| `RT` | `void` |
 
 ## Callable
 
 ### ListenFn
 
-▸ **ListenFn**(`event`, `fn`): `void`
+▸ **ListenFn**<`E`\>(`event`, `fn`): `RT`
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `E` | extends `string` \| `number` \| `symbol` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `string` |
-| `fn` | `Function` |
+| `event` | `E` |
+| `fn` | `EventCallback`<`T`, `E`\> |
 
 #### Returns
 
-`void`
+`RT`
 
 #### Defined in
 
-[observable.ts:17](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L17)
+[observable.ts:40](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L40)

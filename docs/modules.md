@@ -6,6 +6,10 @@
 
 ### Classes
 
+- [HtmlAttr](classes/HtmlAttr.md)
+- [HtmlCss](classes/HtmlCss.md)
+- [HtmlEvents](classes/HtmlEvents.md)
+- [HtmlViewport](classes/HtmlViewport.md)
 - [Observable](classes/Observable.md)
 - [OptionsValidator](classes/OptionsValidator.md)
 
@@ -14,16 +18,24 @@
 - [CustomValidatorFunction](interfaces/CustomValidatorFunction.md)
 - [EmitterFn](interfaces/EmitterFn.md)
 - [ListenFn](interfaces/ListenFn.md)
+- [ObservableEventPrefix](interfaces/ObservableEventPrefix.md)
+- [ObservableEvents](interfaces/ObservableEvents.md)
 - [QueryableComponent](interfaces/QueryableComponent.md)
 
-### Type aliases
+### Type Aliases
 
 - [ObservableInstance](modules.md#observableinstance)
 - [ObservableInstanceChild](modules.md#observableinstancechild)
 - [ObservedComponent](modules.md#observedcomponent)
+- [QueryableState](modules.md#queryablestate)
 
 ### Functions
 
+- [$](modules.md#$)
+- [appendMany](modules.md#appendmany)
+- [displayBlock](modules.md#displayblock)
+- [formSubmitClone](modules.md#formsubmitclone)
+- [isHtmlElement](modules.md#ishtmlelement)
 - [makeOnBeforeMount](modules.md#makeonbeforemount)
 - [makeOnBeforeUnmount](modules.md#makeonbeforeunmount)
 - [makeOnBeforeUpdate](modules.md#makeonbeforeupdate)
@@ -33,71 +45,118 @@
 - [makeQueryable](modules.md#makequeryable)
 - [mergeState](modules.md#mergestate)
 - [mkHook](modules.md#mkhook)
+- [setVisible](modules.md#setvisible)
 
-## Type aliases
+## Type Aliases
 
 ### ObservableInstance
 
-Ƭ **ObservableInstance**<`T`\>: [`ObservedComponent`](modules.md#observedcomponent) & { `$_observer`: [`Observable`](classes/Observable.md)<`T`\> ; `$_ref?`: `String` ; `$_spy?`: `ObserverSpy` ; `observe`: [`Observable`](classes/Observable.md)<`T`\>[``"observe"``]  }
+Ƭ **ObservableInstance**<`T`, `U`\>: [`ObservedComponent`](modules.md#observedcomponent)<`U`\> & { `$_observer`: [`Observable`](classes/Observable.md)<`T`, `U`\> ; `$_ref?`: `String` ; `$_spy?`: `ObserverSpy`<`T`, `U`\> ; `observe`: [`Observable`](classes/Observable.md)<`T`, `U`\>[``"observe"``]  }
 
 #### Type parameters
 
-| Name |
-| :------ |
-| `T` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `T` |
+| `U` | [`ObservableEvents`](interfaces/ObservableEvents.md) |
 
 #### Defined in
 
-[observable.ts:37](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L37)
+[observable.ts:62](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L62)
 
 ___
 
 ### ObservableInstanceChild
 
-Ƭ **ObservableInstanceChild**: [`ObservedComponent`](modules.md#observedcomponent) & `Cleanup`
+Ƭ **ObservableInstanceChild**<`T`, `U`\>: `T` & [`ObservedComponent`](modules.md#observedcomponent)<`U`\> & `Cleanup`
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `T` | `T` |
+| `U` | [`ObservableEvents`](interfaces/ObservableEvents.md) |
 
 #### Defined in
 
-[observable.ts:35](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L35)
+[observable.ts:60](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L60)
 
 ___
 
 ### ObservedComponent
 
-Ƭ **ObservedComponent**: `Object`
+Ƭ **ObservedComponent**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `T` | [`ObservableEvents`](interfaces/ObservableEvents.md) |
 
 #### Type declaration
 
 | Name | Type |
 | :------ | :------ |
-| `off` | [`ListenFn`](interfaces/ListenFn.md) |
-| `on` | [`ListenFn`](interfaces/ListenFn.md) & `Cleanup` |
-| `one` | [`ListenFn`](interfaces/ListenFn.md) |
-| `trigger` | [`EmitterFn`](interfaces/EmitterFn.md) |
+| `emit` | [`EmitterFn`](interfaces/EmitterFn.md)<`T`\> |
+| `off` | [`ListenFn`](interfaces/ListenFn.md)<`T`\> |
+| `on` | [`ListenFn`](interfaces/ListenFn.md)<`T`, `Cleanup`\> |
+| `once` | [`ListenFn`](interfaces/ListenFn.md)<`T`\> |
+| `one` | [`ListenFn`](interfaces/ListenFn.md)<`T`\> |
+| `trigger` | [`EmitterFn`](interfaces/EmitterFn.md)<`T`\> |
 
 #### Defined in
 
-[observable.ts:28](https://github.com/riot-tools/sak/blob/8a50b76/lib/observable.ts#L28)
+[observable.ts:51](https://github.com/riot-tools/sak/blob/741d242/lib/observable.ts#L51)
 
-## Functions
+___
 
-### makeOnBeforeMount
+### QueryableState
 
-▸ `Const` **makeOnBeforeMount**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+Ƭ **QueryableState**<`S`\>: `S` & { `fetchError?`: `Error` \| ``null`` ; `isFetching?`: `boolean`  }
 
 #### Type parameters
 
 | Name |
 | :------ |
-| `T` |
+| `S` |
+
+#### Defined in
+
+[queryable.ts:4](https://github.com/riot-tools/sak/blob/741d242/lib/queryable.ts#L4)
+
+## Functions
+
+### $
+
+▸ **$**(`selector`, `ctx?`): `Element`[]
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| `selector` | `string` |
+| `ctx?` | `Element` |
+
+#### Returns
+
+`Element`[]
+
+#### Defined in
+
+[bianco.ts:3](https://github.com/riot-tools/sak/blob/741d242/lib/bianco.ts#L3)
+
+___
+
+### appendMany
+
+▸ **appendMany**(`root`, `...children`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `root` | `Element` |
+| `...children` | `Element`[] |
 
 #### Returns
 
@@ -105,27 +164,128 @@ ___
 
 #### Defined in
 
-[meta.ts:52](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L52)
+[dom.ts:29](https://github.com/riot-tools/sak/blob/741d242/lib/dom.ts#L29)
+
+___
+
+### displayBlock
+
+▸ **displayBlock**(`el`, `visible`): `ManyElements`<`Element`\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `el` | `Element` |
+| `visible` | `boolean` |
+
+#### Returns
+
+`ManyElements`<`Element`\>
+
+#### Defined in
+
+[dom.ts:39](https://github.com/riot-tools/sak/blob/741d242/lib/dom.ts#L39)
+
+___
+
+### formSubmitClone
+
+▸ **formSubmitClone**(`form`, `cb`): `void`
+
+Receives a form to clone, and a callback to manipulate the clone.
+Appends a hidden form to DOM and then submits.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `form` | `HTMLFormElement` | The form element |
+| `cb` | `Function` | The callback that will be passed cloned form |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[dom.ts:9](https://github.com/riot-tools/sak/blob/741d242/lib/dom.ts#L9)
+
+___
+
+### isHtmlElement
+
+▸ **isHtmlElement**(`target`): `boolean`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `target` | `Element` |
+
+#### Returns
+
+`boolean`
+
+#### Defined in
+
+[dom.ts:42](https://github.com/riot-tools/sak/blob/741d242/lib/dom.ts#L42)
+
+___
+
+### makeOnBeforeMount
+
+▸ **makeOnBeforeMount**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `P` |
+| `S` |
+| `T` |
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeOnBeforeUnmount
 
-▸ `Const` **makeOnBeforeUnmount**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+▸ **makeOnBeforeUnmount**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
 
 #### Type parameters
 
 | Name |
 | :------ |
+| `P` |
+| `S` |
 | `T` |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
 
 #### Returns
 
@@ -133,27 +293,31 @@ ___
 
 #### Defined in
 
-[meta.ts:56](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L56)
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeOnBeforeUpdate
 
-▸ `Const` **makeOnBeforeUpdate**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+▸ **makeOnBeforeUpdate**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
 
 #### Type parameters
 
 | Name |
 | :------ |
+| `P` |
+| `S` |
 | `T` |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
 
 #### Returns
 
@@ -161,27 +325,31 @@ ___
 
 #### Defined in
 
-[meta.ts:54](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L54)
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeOnMounted
 
-▸ `Const` **makeOnMounted**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+▸ **makeOnMounted**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
 
 #### Type parameters
 
 | Name |
 | :------ |
+| `P` |
+| `S` |
 | `T` |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
 
 #### Returns
 
@@ -189,27 +357,31 @@ ___
 
 #### Defined in
 
-[meta.ts:53](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L53)
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeOnUnmounted
 
-▸ `Const` **makeOnUnmounted**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+▸ **makeOnUnmounted**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
 
 #### Type parameters
 
 | Name |
 | :------ |
+| `P` |
+| `S` |
 | `T` |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
 
 #### Returns
 
@@ -217,27 +389,31 @@ ___
 
 #### Defined in
 
-[meta.ts:57](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L57)
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeOnUpdated
 
-▸ `Const` **makeOnUpdated**<`T`\>(`component`, `fn`, `runAfter?`): `void`
+▸ **makeOnUpdated**<`P`, `S`, `T`\>(`component`, `fn`, `runAfter?`): `void`
+
+Creates a
 
 #### Type parameters
 
 | Name |
 | :------ |
+| `P` |
+| `S` |
 | `T` |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `component` | `T` |
-| `fn` | `Function` |
-| `runAfter?` | `boolean` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `component` | `T` | riot component to make hook on |
+| `fn` | `RiotHookComponent`<`P`, `S`\> | hook function |
+| `runAfter?` | `boolean` | whether to run hook function before or after original |
 
 #### Returns
 
@@ -245,13 +421,13 @@ ___
 
 #### Defined in
 
-[meta.ts:55](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L55)
+[meta.ts:26](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L26)
 
 ___
 
 ### makeQueryable
 
-▸ `Const` **makeQueryable**<`T`\>(`component`): `T` & [`QueryableComponent`](interfaces/QueryableComponent.md) & `RiotComponent`<`any`, `any`\>
+▸ **makeQueryable**<`T`, `Props`, `State`\>(`component`): `T` & [`QueryableComponent`](interfaces/QueryableComponent.md)<`State`\>
 
 Adds functionality to riot components that allow them to
 set its own state to isFetching while an async call is being made.
@@ -259,9 +435,11 @@ Any errors are recorded in the state's `fetchError` property
 
 #### Type parameters
 
-| Name |
-| :------ |
-| `T` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `Partial`<`RiotComponent`<`Props`, `State`\>\> |
+| `Props` | {} |
+| `State` | {} |
 
 #### Parameters
 
@@ -271,32 +449,33 @@ Any errors are recorded in the state's `fetchError` property
 
 #### Returns
 
-`T` & [`QueryableComponent`](interfaces/QueryableComponent.md) & `RiotComponent`<`any`, `any`\>
+`T` & [`QueryableComponent`](interfaces/QueryableComponent.md)<`State`\>
 
 component with a fetchable interface
 
 #### Defined in
 
-[queryable.ts:36](https://github.com/riot-tools/sak/blob/8a50b76/lib/queryable.ts#L36)
+[queryable.ts:51](https://github.com/riot-tools/sak/blob/741d242/lib/queryable.ts#L51)
 
 ___
 
 ### mergeState
 
-▸ `Const` **mergeState**<`T`\>(`component`, `state`): `void`
+▸ **mergeState**<`Component`, `State`\>(`component`, `state`): `void`
 
 #### Type parameters
 
-| Name |
-| :------ |
-| `T` |
+| Name | Type |
+| :------ | :------ |
+| `Component` | extends `Partial`<`RiotComponent`<`any`, `any`\>\> |
+| `State` | extends `object` = {} |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `component` | `T` & `RiotComponent`<`any`, `any`\> |
-| `state` | `object` |
+| `component` | `Component` |
+| `state` | `State` |
 
 #### Returns
 
@@ -304,21 +483,28 @@ ___
 
 #### Defined in
 
-[meta.ts:59](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L59)
+[meta.ts:64](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L64)
 
 ___
 
 ### mkHook
 
-▸ `Const` **mkHook**(`hook`): `MakeHook`
+▸ **mkHook**<`P`, `S`\>(`hook`): `MakeHook`
 
 Closure to implement stackable hooks
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `P` | `any` |
+| `S` | `any` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `hook` | `RiotHookComponent` |
+| `hook` | `HookKeys` |
 
 #### Returns
 
@@ -326,4 +512,25 @@ Closure to implement stackable hooks
 
 #### Defined in
 
-[meta.ts:30](https://github.com/riot-tools/sak/blob/8a50b76/lib/meta.ts#L30)
+[meta.ts:35](https://github.com/riot-tools/sak/blob/741d242/lib/meta.ts#L35)
+
+___
+
+### setVisible
+
+▸ **setVisible**(`el`, `visible`): `ManyElements`<`Element`\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `el` | `Element` |
+| `visible` | `boolean` |
+
+#### Returns
+
+`ManyElements`<`Element`\>
+
+#### Defined in
+
+[dom.ts:40](https://github.com/riot-tools/sak/blob/741d242/lib/dom.ts#L40)
