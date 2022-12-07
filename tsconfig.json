@@ -21,6 +21,9 @@
         // "strictBindCallApply": true,
         // "strictPropertyInitialization": true,
         "noImplicitThis": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ]
     },
     "include": [
         "lib"
