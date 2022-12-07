@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/riot-tools/sak/compare/v2.0.0...v2.1.0) (2022-12-04)
+
+
+### Features
+
+* 🎸 improved typings for observable ([741d242](https://github.com/riot-tools/sak/commit/741d242daf740b22d092a39066a89b693e9af9a3))
+
 # [2.0.0](https://github.com/riot-tools/sak/compare/v1.4.3...v2.0.0) (2021-10-26)
 
 
