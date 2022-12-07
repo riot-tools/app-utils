@@ -12,12 +12,6 @@ import sinon from 'sinon';
 
 const document = window.document;
 
-const isNan = (n) => (
-    NaN !== n &&
-    !(n > 0) &&
-    !(n < 0) &&
-    !(n === 0)
-);
 
 const stub: {
     sampleCss?: Partial<CSSStyleDeclaration>
@@ -28,45 +22,45 @@ describe('HtmlViewport', function () {
     it('scrollbarWidth is a number', function () {
         const result = HtmlViewport.scrollbarWidth;
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('documentHeight is a number', function () {
         const result = HtmlViewport.documentHeight;
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('documentWidth is a number', function () {
         const result = HtmlViewport.documentWidth;
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('scrollTop is a number', function () {
         const result = HtmlViewport.scrollTop;
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('scrollLeft is a number', function () {
         const result = HtmlViewport.scrollLeft;
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('elementOffsetTop is a number', function () {
         const div = document.createElement('div')
         const result = HtmlViewport.elementOffsetTop(div);
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 
     it('elementOffsetLeft is a number', function () {
         const div = document.createElement('div')
         const result = HtmlViewport.elementOffsetLeft(div);
         expect(typeof result).to.equal('number');
-        expect(isNan(result)).to.equal(false);
+        expect(Number.isNaN(result)).to.equal(false);
     });
 });
 
@@ -81,31 +75,31 @@ describe('HtmlCss', function () {
     it('it can set a style attribute', function () {
 
         const div = document.createElement('div');
-        HtmlCss.set(div, stub.sampleCss);
+        HtmlCss.set(div, stub.sampleCss!);
 
-        expect(div.style.fontSize).to.equal(stub.sampleCss.fontSize);
-        expect(div.style.color).to.equal(stub.sampleCss.color);
+        expect(div.style.fontSize).to.equal(stub.sampleCss!.fontSize);
+        expect(div.style.color).to.equal(stub.sampleCss!.color);
     });
 
     it('it can set a style attribute on many nodes', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
-        HtmlCss.set([div, span], stub.sampleCss);
+        HtmlCss.set([div, span], stub.sampleCss!);
 
-        expect(div.style.fontSize).to.equal(stub.sampleCss.fontSize);
-        expect(div.style.color).to.equal(stub.sampleCss.color);
+        expect(div.style.fontSize).to.equal(stub.sampleCss!.fontSize);
+        expect(div.style.color).to.equal(stub.sampleCss!.color);
 
-        expect(span.style.fontSize).to.equal(stub.sampleCss.fontSize);
-        expect(span.style.color).to.equal(stub.sampleCss.color);
+        expect(span.style.fontSize).to.equal(stub.sampleCss!.fontSize);
+        expect(span.style.color).to.equal(stub.sampleCss!.color);
     });
 
     it('it can get style attributes', function () {
 
         const div = document.createElement('div');
-        HtmlCss.set(div, stub.sampleCss);
+        HtmlCss.set(div, stub.sampleCss!);
 
-        expect(HtmlCss.get(div, 'color')).to.equal(stub.sampleCss.color);
+        expect(HtmlCss.get(div, 'color')).to.equal(stub.sampleCss!.color);
 
     });
 
@@ -114,20 +108,20 @@ describe('HtmlCss', function () {
         const div = document.createElement('div');
         const span = document.createElement('span');
 
-        HtmlCss.set([div, span], stub.sampleCss);
+        HtmlCss.set([div, span], stub.sampleCss!);
 
         const result = HtmlCss.get([div, span], 'color');
 
-        expect(result[0]).to.include(stub.sampleCss.color);
-        expect(result[1]).to.include(stub.sampleCss.color);
+        expect(result[0]).to.include(stub.sampleCss!.color);
+        expect(result[1]).to.include(stub.sampleCss!.color);
     });
 
     it('it can get many style attributes', function () {
 
         const div = document.createElement('div');
-        HtmlCss.set(div, stub.sampleCss);
+        HtmlCss.set(div, stub.sampleCss!);
 
-        expect(HtmlCss.get(div, ['color', 'fontSize'])).to.include(stub.sampleCss);
+        expect(HtmlCss.get(div, ['color', 'fontSize'])).to.include(stub.sampleCss!);
 
     });
 
@@ -135,18 +129,18 @@ describe('HtmlCss', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
-        HtmlCss.set([div, span], stub.sampleCss);
+        HtmlCss.set([div, span], stub.sampleCss!);
 
         const results = HtmlCss.get([div, span], ['color', 'fontSize']);
 
-        expect(results[0]).to.include(stub.sampleCss);
-        expect(results[1]).to.include(stub.sampleCss);
+        expect(results[0]).to.include(stub.sampleCss!);
+        expect(results[1]).to.include(stub.sampleCss!);
     });
 
     it('it can remove style attributes', function () {
 
         const div = document.createElement('div');
-        HtmlCss.set(div, stub.sampleCss);
+        HtmlCss.set(div, stub.sampleCss!);
 
         HtmlCss.remove(div, 'color');
 
@@ -157,7 +151,7 @@ describe('HtmlCss', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
-        HtmlCss.set([div, span], stub.sampleCss);
+        HtmlCss.set([div, span], stub.sampleCss!);
 
         HtmlCss.remove([div, span], 'color');
 
@@ -170,9 +164,9 @@ describe('HtmlCss', function () {
 
         const div = document.createElement('div');
         const span = document.createElement('span');
-        HtmlCss.set([div, span], stub.sampleCss);
+        HtmlCss.set([div, span], stub.sampleCss!);
 
-        HtmlCss.remove([div, span], Object.keys(stub.sampleCss));
+        HtmlCss.remove([div, span], Object.keys(stub.sampleCss!));
 
         expect(div.style.color).to.be.empty;
         expect(div.style.fontSize).to.be.empty;
