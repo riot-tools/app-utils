@@ -5,59 +5,83 @@
  */
 
 import { makeOnBeforeUnmount } from "./meta";
-import OptionsValidator from "./options-validator";
 
 /**
  * Overrideable interface
  */
-export interface ObservableEvents {
-    '*': any
-}
+export interface ObservableEvents {}
 
 /**
  * Extendible event prefixes
  */
 export interface ObservableEventPrefix { }
+
 type PrefixNames = keyof ObservableEventPrefix;
 
-type EventNames<T> = keyof T;
+type Events<Shape> = keyof Shape;
 
-// type EventNames = EventNames | `${PrefixNames}-${EventNames}`;
-type EventType<T, E extends EventNames<T>> = T[E]
-
-interface EventCallback<T, E extends EventNames<T>> {
-    (data: EventType<T, E>): void
+interface EventCallback<Shape> {
+    (data: Shape): void
 }
 
 
 const ALL_CALLBACKS = '*'
 const define = Object.defineProperties
 
-type CallbacksSet = Set<Function>;
-type EventCallbacksMap = Map<string, CallbacksSet>
-
-export interface ListenFn<T, RT = void> {
-    <E extends EventNames<T>>(event: E, fn: EventCallback<T, E>): RT
+type RgxEmitData<Shape> = {
+    event: Events<Shape>,
+    data: any
 }
 
-export interface EmitterFn<T> {
-    <E extends EventNames<T>>(event: E, ...args: EventType<T, E>[]): void
+type EventCbData<E, Shape> = (
+    E extends Events<Shape>
+    ? Shape[E]
+    : E extends RegExp
+        ? RgxEmitData<Shape>
+        : never
+)
+
+export interface EventListener<
+    Shape,
+    Returns = void
+> {
+    <E extends Events<Shape> | RegExp>(
+        event: E,
+        fn: EventCallback<EventCbData<E, Shape>>
+    ): Returns
 }
+
+export interface EventEmit<Shape> {
+    <E extends Events<Shape> | RegExp>(
+        event: E,
+        data: E extends Events<Shape>
+        ? Shape[E][]
+        : any
+    ): void
+}
+
+export interface RemoveEventListener<Shape> {
+    <E extends keyof Shape | RegExp>(
+        event: E,
+        listener?: Function
+    ): void
+}
+
 
 type Cleanup = {
     cleanup: () => void
 }
 
-export type ObservedComponent<T = ObservableEvents> = {
-    on: ListenFn<T, Cleanup>,
-    one: ListenFn<T>,
-    once: ListenFn<T>,
-    off: ListenFn<T>,
-    trigger: EmitterFn<T>,
-    emit: EmitterFn<T>,
+export type ObservedComponent<E = ObservableEvents> = {
+    on: EventListener<E, Cleanup>,
+    one: EventListener<E>,
+    once: EventListener<E>,
+    off: EventListener<E>,
+    trigger: EventEmit<E>,
+    emit: EventEmit<E>,
 };
 
-export type ObservableInstanceChild<T, U = ObservableEvents> = T & ObservedComponent<U> & Cleanup
+export type ObservableInstanceChild<C, E = ObservableEvents> = C & ObservedComponent<E> & Cleanup
 
 export type ObservableInstance<T, U = ObservableEvents> = ObservedComponent<U> & {
     observe: Observable<T, U>['observe'],
@@ -82,19 +106,19 @@ const defineOpts = <T>(value: T, configurable = false) => ({
 
 type ObservableFunctionName = 'on' | 'one' | 'off' | 'trigger';
 
-type OberverSpyOptions<T> = {
-    event: keyof T,
+type OberverSpyOptions<E> = {
+    event: keyof E | RegExp | '*',
     listener?: Function,
-    args?: any[],
+    data?: any,
 };
 
-type ObserverSpyEvent<T, U> = OberverSpyOptions<U> & {
+type ObserverSpyEvent<C, E> = OberverSpyOptions<E> & {
     fn: ObservableFunctionName,
-    context: Observable<T, U>
+    context: Observable<C, E>
 }
 
-interface ObserverSpy<T, U> {
-    (event: ObserverSpyEvent<T, U>): void
+interface ObserverSpy<C, E> {
+    (event: ObserverSpyEvent<C, E>): void
 }
 
 const sendToSpy = <U>(
@@ -103,7 +127,7 @@ const sendToSpy = <U>(
     {
         event,
         listener = null,
-        args = null
+        data = null
     }: OberverSpyOptions<U>
 ) => {
 
@@ -114,7 +138,7 @@ const sendToSpy = <U>(
             event,
             listener,
             context,
-            args
+            data
         });
     }
 }
@@ -124,29 +148,164 @@ type ObservableOptions<T, U> = {
     spy?: ObserverSpy<T, U>
 };
 
-const validator = new OptionsValidator({
-    ref: 'String',
-    spy: 'Function'
-});
+class EventTrace extends Error {
+    listener: Function | null
+    data: any
+    func: string
+    event: string
+    stack: string
+}
 
-export class Observable<T, U = ObservableEvents> {
+const traceStackFilterRgx = (
+    new RegExp(`(${[
+        'traceFn',
+        'node_modules',
+        '$_spy',
+        'observable'
+    ].join('|')})`)
+);
 
-    $_callbacks: EventCallbacksMap = new Map();
+export const makeEventTracer = (
+    event: string,
+    caller: any,
+    listenerOrData?: Function | any
+) => {
+
+    const err = new Error();
+
+    const split = err.stack!.split('\n');
+
+    split.shift();
+
+    const filtered = split.filter(
+        line => !traceStackFilterRgx.test(line)
+    );
+
+    const message = `EventStack (${event} ${caller.toString()}):`;
+
+    filtered.unshift(message);
+    const stack = filtered.join('\n');
+
+    const tracer = new EventTrace(message);
+
+    tracer.name = message;
+
+    tracer.func = event;
+    tracer.event = caller;
+    tracer.stack = stack;
+
+    tracer.listener = null;
+    tracer.data = null;
+
+    if (typeof listenerOrData === 'function') {
+
+        tracer.listener = listenerOrData;
+    }
+    else {
+
+        tracer.data = listenerOrData;
+    }
+
+    return tracer;
+};
+
+const rgxStrToRgx = (rgxStr: string) => {
+
+    const split = rgxStr?.replace(/^\//, '').split('/');
+
+    const flags = split.pop();
+    const expr = split.join('/');
+
+    return RegExp(expr, flags);
+};
+
+const arrOfMatchingValues = (
+    vals: string[],
+    map: Map<any, Set<Function>>
+) => {
+
+    const listeners: Function[] = [];
+
+
+    for (const key of vals) {
+        for (const fn of map.get(key) || new Set()) {
+            listeners.push(fn);
+        }
+    }
+
+    return listeners;
+}
+
+
+export class Observable<Component, Shape = ObservableEvents> {
+
+    $_listenerMap: Map<Events<Shape>, Set<Function>> = new Map();
+    $_rgxListenerMap: Map<string, Set<Function>> = new Map();
     $_target: any = null;
-    $_spy?: ObserverSpy<T, U>;
+    $_spy?: ObserverSpy<Component, Shape>;
     $_ref?: String;
+
+    $_debug() {
+
+        const original = this.$_spy;
+
+        const spy: ObserverSpy<Component, Shape> = (ev) => {
+
+            const {
+                event,
+                fn,
+                data,
+                listener
+            } = ev;
+
+            makeEventTracer(
+                event as any,
+                fn,
+                data || listener
+            );
+
+            original && original(ev);
+        }
+
+        this.$_spy = spy;
+    }
+
+    /**
+     * Same as `observable.on`
+     */
+    listen: Observable<Component, Shape>['on'];
 
     /**
      * Same as `observable.one`
      */
-    once: Observable<T, U>['one'];
+    once: Observable<Component, Shape>['one'];
 
     /**
      * Same as `observable.trigger`
      */
-    emit: Observable<T, U>['trigger'];
+    emit: Observable<Component, Shape>['trigger'];
 
-    constructor(target?: T, options?: ObservableOptions<T, U>) {
+    /**
+     * Same as `observable.trigger`
+     */
+    send: Observable<Component, Shape>['trigger'];
+
+    /**
+     * Same as `observable.off`
+     */
+    unlisten: Observable<Component, Shape>['off'];
+
+    /**
+     * Same as `observable.off`
+     */
+    remove: Observable<Component, Shape>['off'];
+
+    /**
+     * Same as `observable.off`
+     */
+    rm: Observable<Component, Shape>['off'];
+
+    constructor(target?: Component, options?: ObservableOptions<Component, Shape>) {
 
         const self = this;
         this.$_target = target || this;
@@ -154,22 +313,35 @@ export class Observable<T, U = ObservableEvents> {
         // Make these functions non-enumerable
         define(this, {
             on: defineOpts(this.on),
+            listen: defineOpts(this.on),
             one: defineOpts(this.one),
             once: defineOpts(this.one),
             off: defineOpts(this.off),
+            remove: defineOpts(this.off),
+            rm: defineOpts(this.off),
+            unlisten: defineOpts(this.off),
             trigger: defineOpts(this.trigger),
             emit: defineOpts(this.trigger),
+            send: defineOpts(this.trigger),
             observe: defineOpts(this.observe),
-            $_callbacks: defineOpts(this.$_callbacks),
+            $_listenerMap: defineOpts(this.$_listenerMap),
+            $_rgxListenerMap: defineOpts(this.$_rgxListenerMap),
             $_target: defineOpts(this.$_target),
             $_spy: defineOpts(this.$_spy, true),
-            $_ref: defineOpts(this.$_ref, true)
+            $_ref: defineOpts(this.$_ref, true),
+            $_debug: defineOpts(this.$_debug, true)
         });
 
         // Validate option if exists
         if (options) {
 
-            validator.validate(options);
+            if (options.ref && typeof options.ref !== 'string') {
+                throw TypeError('Observable options.ref must be a string');
+            }
+
+            if (options.spy && typeof options.spy !== 'function') {
+                throw TypeError('Observable options.spy must be a function');
+            }
 
             options.ref && define(this, { $_ref: defineOpts(options.ref) });
             options.spy && define(this, { $_spy: defineOpts(options.spy) });
@@ -180,15 +352,14 @@ export class Observable<T, U = ObservableEvents> {
         if (target) {
 
             define(target, {
-                on: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.on(ev, fn)),
-                one: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.one(ev, fn)),
-                off: defineOpts(<E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => self.off(ev, fn)),
-                trigger: defineOpts(<E extends EventNames<U>>(ev: E, ...args: EventType<U, E>[]) => self.trigger(ev, ...args)),
+                on: defineOpts((ev: any, fn: any) => self.on(ev, fn)),
+                one: defineOpts((ev: any, fn: any) => self.one(ev, fn)),
+                off: defineOpts((ev: any, fn: any) => self.off(ev, fn)),
+                trigger: defineOpts((ev: any, data: any) => self.trigger(ev, data)),
                 observe: defineOpts((component: any, prefix?: PrefixNames) => self.observe(component, prefix)),
                 $_observer: defineOpts(self)
             });
         }
-
 
         return this.$_target;
     }
@@ -221,7 +392,7 @@ export class Observable<T, U = ObservableEvents> {
         const self = this;
 
         interface PrefixCallback {
-            <E extends EventNames<U>>(event: E): EventNames<U>
+            <E extends Events<Shape>>(event: E): Events<Shape>
         }
 
         let namedEvent: PrefixCallback = (ev) => `${prefix}-${ev as string}` as any;
@@ -245,7 +416,7 @@ export class Observable<T, U = ObservableEvents> {
         define(component, {
 
             on: defineOpts(
-                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
+                (ev: any, fn: any) => {
 
                     return self.on(
                         namedEvent(ev),
@@ -255,7 +426,7 @@ export class Observable<T, U = ObservableEvents> {
             ),
 
             one: defineOpts(
-                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
+                (ev: any, fn: any) => {
 
                     return self.one(
                         namedEvent(ev),
@@ -265,7 +436,7 @@ export class Observable<T, U = ObservableEvents> {
             ),
 
             off: defineOpts(
-                <E extends EventNames<U>>(ev: E, fn: EventCallback<U, E>) => {
+                (ev: any, fn: any) => {
 
                     const tracked = [...listenerTracker.values()];
 
@@ -274,9 +445,9 @@ export class Observable<T, U = ObservableEvents> {
 
                         for (const entry of tracked) {
 
-                            const [ev, listener] = entry as [EventNames<U>, EventCallback<U, any>];
+                            const [ev, listener] = entry as [Events<Shape>, EventCallback<Shape>];
                             listenerTracker.delete(entry);
-                            self.off(namedEvent(ev), listener);
+                            self.off(namedEvent(ev), listener as any);
                         }
                     }
                     else {
@@ -291,9 +462,9 @@ export class Observable<T, U = ObservableEvents> {
             ),
 
             trigger: defineOpts(
-                <E extends EventNames<U>>(ev: E, ...args: EventType<U, E>[]) => {
+                (ev: any, data: any) => {
 
-                    return self.trigger(namedEvent(ev), ...args);
+                    return self.trigger(namedEvent(ev), data);
                 }
             ),
 
@@ -332,32 +503,95 @@ export class Observable<T, U = ObservableEvents> {
         return observed;
     }
 
+    private $_eventInfo(event:  Events<Shape> | RegExp | '*') {
+
+        const isRgx = (event as RegExp).constructor === RegExp;
+        const eventName = event.toString() as any;
+
+        return {
+            isRgx,
+            eventName,
+            rgx: event as RegExp
+        };
+    }
+
+    private $_withRgxMatchKeys (rgx: RegExp) {
+
+        return [...this.$_listenerMap.keys()].filter(
+            k => rgx.test(k as string)
+        ) as Events<Shape>[];
+    }
+
+    private $_withKeyMatchRgx (key: string) {
+
+        return [...this.$_rgxListenerMap.keys()].filter(
+            s => rgxStrToRgx(s).test(key)
+        ).flat();
+    }
+
+    private $_matchStr (rgx: RegExp) {
+
+        const events = this.$_withRgxMatchKeys(rgx);
+
+        return arrOfMatchingValues(
+            events as any,
+            this.$_listenerMap
+        );
+    }
+
+
+    private $_matchRgx (str: string) {
+
+        const events = this.$_withKeyMatchRgx(str);
+
+        return arrOfMatchingValues(
+            events as any,
+            this.$_rgxListenerMap
+        );
+    }
+
     /**
      * Listen for an event
      * @param event
      * @param listener
      * @returns {Cleanup}
      */
-    on<E extends EventNames<U>>(event: E, listener: EventCallback<U, E>): Cleanup {
+    on<E extends Events<Shape> | RegExp>(
+        event: E | '*',
+        listener: E extends Events<Shape>
+            ? EventCallback<Shape[E]>
+            : Function
+    ): Cleanup {
 
         if (this.$_spy) {
 
-            sendToSpy <U>('on', this, { event, listener });
+            sendToSpy <Shape>('on', this, { event, listener });
         }
 
-        const stored = this.$_callbacks.get(event as string);
+        const { eventName, isRgx } = this.$_eventInfo(event);
 
-        if (stored && !stored.has(listener)) {
-            stored.add(listener);
+        const listenerMap = isRgx ? this.$_rgxListenerMap : this.$_listenerMap;
+
+        const cbSet = listenerMap.get(eventName);
+
+        if (cbSet && !cbSet.has(listener)) {
+            cbSet.add(listener);
         }
 
-        if (!stored) {
+        if (!cbSet) {
 
-            this.$_callbacks.set(event as string, new Set([listener]));
+            listenerMap.set(eventName, new Set([listener]));
         }
 
         return {
-            cleanup: () => this.off(event, listener)
+            cleanup: () => {
+
+                if (this.$_spy) {
+                    sendToSpy <Shape>('clean', this, { event, listener });
+                }
+
+                cbSet.delete(listener);
+            }
         };
     }
 
@@ -366,22 +600,27 @@ export class Observable<T, U = ObservableEvents> {
      * @param event
      * @param listener
      */
-    one<E extends EventNames<U>>(event: E, listener: EventCallback<U, E>) {
+    one <E extends Events<Shape> | RegExp>(
+        event: E | '*',
+        listener: E extends Events<Shape>
+            ? EventCallback<Shape[E]>
+            : Function
+    ) {
 
         if (this.$_spy) {
 
-            sendToSpy <U>('one', this, { event, listener });
+            sendToSpy <Shape>('one', this, { event, listener });
         }
 
         const self = this;
 
-        function on(...args: any[]) {
+        const runOnce: any = function (e, cb) {
 
-            self.off(event, on);
-            listener.apply(self, args)
+            self.off(event, runOnce);
+            listener.apply(self, [e, cb]);
         }
 
-        return self.on(event, on);
+        return self.on(event, runOnce);
     }
 
     /**
@@ -389,33 +628,51 @@ export class Observable<T, U = ObservableEvents> {
      * @param event
      * @param listener
      */
-    off<E extends EventNames<U>>(event: E, listener?: EventCallback<U, E>) {
+    off <E extends Events<Shape> | RegExp>(
+        event: E | '*',
+        listener?: E extends Events<Shape>
+            ? EventCallback<Shape[E]>
+            : Function
+    ) {
 
         if (this.$_spy) {
 
-            sendToSpy <U>('off', this, { event, listener });
+            sendToSpy <Shape>('off', this, { event, listener });
         }
 
         if (event === ALL_CALLBACKS && !listener) {
 
-            this.$_callbacks.clear();
+            this.$_listenerMap.clear();
+            this.$_rgxListenerMap.clear();
             return;
         }
 
-        if (listener) {
+        const { eventName, isRgx, rgx } = this.$_eventInfo(event);
 
-            const fns = this.$_callbacks.get(event as string);
+        const matches: Events<Shape>[] = isRgx ?
+            this.$_withRgxMatchKeys(rgx) :
+            [eventName]
+        ;
 
-            if (fns) {
+        matches.forEach((_ev) => {
 
-                fns.delete(listener);
-                if (fns.size === 0) this.$_callbacks.delete(event as string);
-            }
+            const ev = _ev as Events<Shape>;
 
-            return;
-        }
+            if (listener) {
+                const fns = this.$_listenerMap.get(ev);
 
-        this.$_callbacks.delete(event as string);
+                if (fns) {
+
+                    fns.delete(listener);
+                    if (fns.size === 0) this.$_listenerMap.delete(ev);
+                }
+
+                return;
+            };
+
+            this.$_listenerMap.delete(ev);
+        })
+
     }
 
     /**
@@ -423,23 +680,31 @@ export class Observable<T, U = ObservableEvents> {
      * @param event
      * @param args
      */
-    trigger<E extends EventNames<U>>(event: E, ...args: EventType<U, E>[]) {
+    trigger<E extends Events<Shape> | RegExp>(
+        event: E | '*',
+        data?: E extends Events<Shape> ? Shape[E] : Shape[Events<Shape>]
+    ) {
 
         if (this.$_spy) {
 
-            sendToSpy <U>('trigger', this, { event, args });
+            sendToSpy <Shape>('trigger', this, { event, data });
         }
 
-        const fns = this.$_callbacks.get(event as string)
+        const { eventName, isRgx, rgx } = this.$_eventInfo(event);
 
-        if (fns) fns.forEach(fn => fn.apply(this, args))
+        if (!isRgx) {
 
-        if (this.$_callbacks.get(ALL_CALLBACKS) && event !== ALL_CALLBACKS) {
-            this.trigger(
-                ALL_CALLBACKS as EventNames<U>,
-                event as any,
-                ...args
-            )
+            const cbs = this.$_listenerMap.get(eventName);
+
+            const rgxCbs = this.$_matchRgx(eventName);
+            if (cbs) cbs.forEach(fn => fn.apply(this, [data]))
+            if (rgxCbs) rgxCbs.forEach(fn => fn.apply(this, [data]))
+
+            return;
         }
+
+        const cbs = this.$_matchStr(rgx);
+
+        if (cbs) cbs.forEach(fn => fn.apply(this, [data]))
     }
 }

@@ -12,6 +12,14 @@ declare module '../lib' {
         test3: string
         pooop: string
 
+        aa: string
+        ba: string
+        bc: string
+        cda: string
+        zo: string
+        zu: string
+        za: string
+
         'child-test': string
     }
 
@@ -100,6 +108,8 @@ describe('Observable', function () {
 
     it('should not have enumerable properties', () => {
 
+        console.log(Object.keys(stub.observer));
+
         doToBoth((observed, which) => {
 
             expect(Object.keys(observed), which).to.have.length(0);
@@ -115,10 +125,10 @@ describe('Observable', function () {
 
             observed.on('test', fake);
 
-            observed.trigger('test', 'a', 'b', 'c');
+            observed.trigger('test', 'a');
 
             expect(fake.calledOnce, which).to.be.true;
-            expect(fake.calledWith('a', 'b', 'c'), which).to.be.true;
+            expect(fake.calledWith('a'), which).to.be.true;
         });
     });
 
@@ -257,16 +267,16 @@ describe('Observable', function () {
             observed.on('test', fake);
             observed.one('test1', fake);
             observed.off('test1', fake);
-            observed.trigger('test', 1, 2);
+            observed.trigger('test', 1);
 
             expect(stub.spy.callCount, which).to.eq(5);
             const calls = stub.spy.getCalls();
 
-            expect(calls[0].args[0], which).to.include({ fn: 'on', event: 'test', args: null });
-            expect(calls[1].args[0], which).to.include({ fn: 'one', event: 'test1', args: null });
-            expect(calls[2].args[0], which).to.include({ fn: 'on', event: 'test1', args: null });
-            expect(calls[3].args[0], which).to.include({ fn: 'off', event: 'test1', args: null });
-            expect(calls[4].args[0], which).to.include({ fn: 'trigger', event: 'test' });
+            expect(calls[0].args[0], which).to.include({ fn: 'on', event: 'test', data: null });
+            expect(calls[1].args[0], which).to.include({ fn: 'one', event: 'test1', data: null });
+            expect(calls[2].args[0], which).to.include({ fn: 'on', event: 'test1', data: null });
+            expect(calls[3].args[0], which).to.include({ fn: 'off', event: 'test1', data: null });
+            expect(calls[4].args[0], which).to.include({ fn: 'trigger', event: 'test', data: 1 });
 
             const contexts = [
                 calls[0].args[0].context,
@@ -290,9 +300,91 @@ describe('Observable', function () {
                 expect(ctx === context, which).to.be.true;
             }
 
-            expect(calls[4].args[0].args).to.contain.members([1, 2]);
+            expect(calls[4].args[0].data).to.equal(1);
 
             sinon.resetHistory();
+        });
+    });
+
+    it('should allow listening to events based on regex', () => {
+
+        const events = [
+            'aa', // a x 4
+            'ba', // b x 2
+            'bc', // c x 2
+            'cDa', // D x 1
+            'zo', // z x 3
+            'zu',
+            'za'
+        ];
+
+        doToBoth((observed, which) => {
+
+            const fakeEv = sinon.stub();
+            const fakeRgx = sinon.stub();
+
+            const bindEv = () => (
+
+                events.map((e) => observed.on(e as any, fakeEv))
+            );
+
+            bindEv();
+
+            observed.on(/a/i, fakeRgx);
+            observed.trigger('aa', 'works');
+
+            expect(fakeEv.getCalls().length, which).to.eq(1);
+            expect(fakeRgx.getCalls().length, which).to.eq(1);
+
+            /** Test for "a" */
+
+            fakeEv.reset(); fakeRgx.reset();
+
+            observed.trigger(/a/i, 'works');
+
+            expect(fakeEv.getCalls().length, which).to.eq(4);
+            expect(fakeRgx.getCalls().length, which).to.eq(0);
+
+            /** Test for "D" */
+
+            fakeEv.reset(); fakeRgx.reset();
+            observed.trigger(/d/, 'works');
+            expect(fakeEv.getCalls().length, which).to.eq(0);
+
+            observed.trigger(/D/, 'works');
+            expect(fakeEv.getCalls().length, which).to.eq(1);
+
+            /** Test for Z and remove Z based on regex */
+
+            fakeEv.reset(); fakeRgx.reset();
+            observed.trigger(/z/, 'works');
+            expect(fakeEv.getCalls().length, which).to.eq(3);
+
+            observed.off(/z/);
+            observed.trigger(/z/, 'works');
+            expect(fakeEv.getCalls().length, which).to.eq(3);
+
+            fakeEv.reset(); fakeRgx.reset();
+
+            /** Removes all callbacks */
+            observed.off('*');
+
+            observed.trigger(/a/i, 'works');
+            observed.trigger('aa', 'works');
+
+            expect(fakeEv.getCalls().length, which).to.eq(0);
+            expect(fakeRgx.getCalls().length, which).to.eq(0);
+
+            /** Removes all callbacks */
+            fakeEv.reset();
+
+            bindEv();
+
+            observed.on(/.+/, fakeRgx);
+
+            events.map((e) => observed.trigger(e as any))
+
+            expect(fakeRgx.getCalls().length, which).to.eq(events.length);
         });
     });
 });
@@ -416,11 +508,11 @@ describe('Observable - observe', () => {
         child.on('test1', childFake);
         child.on('test2', childFake);
 
-        const beforeOff = [...parent!.$_callbacks.keys()];
+        const beforeOff = [...parent!.$_listenerMap.keys()];
 
         child.off('*');
 
-        const afterOff = [...parent!.$_callbacks.keys()];
+        const afterOff = [...parent!.$_listenerMap.keys()];
 
         expect(beforeOff).to.include.members([
             'child-test1', 'child-test2'
@@ -452,11 +544,11 @@ describe('Observable - observe', () => {
         child.on('test1', childFake);
         child.on('test2', childFake);
 
-        const beforeOff = [...parent!.$_callbacks.keys()];
+        const beforeOff = [...parent!.$_listenerMap.keys()];
 
         child.cleanup();
 
-        const afterOff = [...parent!.$_callbacks.keys()];
+        const afterOff = [...parent!.$_listenerMap.keys()];
 
         expect(beforeOff).to.include.members([
             'child-test1', 'child-test2'

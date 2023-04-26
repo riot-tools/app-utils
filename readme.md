@@ -1,8 +1,11 @@
-# Riot Tools - SAK
+# Riot Tools - App Utils
 
-Swiss Army Knife of Riot Tools
+Utilities for building RiotJS apps:
 
-## Documentation
+- DOM utils (css, attribute, event, query, viewport)
+- Observable (highly flexible, extensive, developer friendly)
+- Queryable ()
+- Meta utilities
 
-- [documentation website](https://riot-tools.github.io/sak/getting-started)
-- [classes and interfaces](https://github.com/riot-tools/sak/tree/master/docs)
+
+[Full documentation can be found here](https://riot-tools.github.io/app-utils/getting-started)

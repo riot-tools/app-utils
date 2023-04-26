@@ -14,16 +14,7 @@
         "pretty": true,
         "sourceMap": true,
         "target": "ESNext",
-
-        // "strictNullChecks": true,
-        // "strictFunctionTypes": true,
-        // "noImplicitAny": true,
-        // "strictBindCallApply": true,
-        // "strictPropertyInitialization": true,
-        "noImplicitThis": true,
-        "typeRoots": [
-            "node_modules/@types"
-        ]
+        "noImplicitThis": true
     },
     "include": [
         "lib"

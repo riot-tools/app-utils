@@ -1,7 +1,7 @@
 {
-  "name": "@riot-tools/sak",
-  "version": "2.1.0",
-  "description": "Swiss army knife toolkit for Riotjs",
+  "name": "@riot-tools/app-utils",
+  "version": "3.0.0",
+  "description": "App utilities toolkit for Riotjs",
   "main": "dist/umd.js",
   "module": "dist/es.js",
   "cdn": "dist/iife.js",
@@ -37,7 +37,7 @@
     ]
   },
   "peerDependencies": {
-    "riot": "^6"
+    "riot": ">=6"
   },
   "devDependencies": {
     "@babel/core": "^7",
@@ -46,6 +46,7 @@
     "@babel/register": "^7",
     "@commitlint/cli": "^13",
     "@commitlint/config-conventional": "^13",
+    "@hapi/hapi": "^21.3.1",
     "@riot-tools/state-utils": "^1.x.x",
     "@riotjs/cli": "^6",
     "@riotjs/compiler": "^6",
@@ -63,10 +64,11 @@
     "esm": "^3.2.25",
     "fast-check": "^2",
     "husky": "^7",
-    "jsdom": "^17",
-    "mocha": "^9",
+    "jsdom": "^21",
+    "mocha": "^10",
+    "nock": "^13.3.0",
     "parcel-bundler": "^1",
-    "riot": "^6",
+    "riot": "^7",
     "rollup": "^2",
     "rollup-plugin-delete": "^2",
     "rollup-plugin-terser": "^7",
@@ -74,9 +76,7 @@
     "semantic-release": "^17",
     "sinon": "^15",
     "ts-node": "^10",
-    "typedoc": "^0.23.21",
-    "typedoc-plugin-markdown": "^3.14.0",
-    "typescript": "^4.9"
+    "typescript": "^5"
   },
   "commitlint": {
     "extends": [
